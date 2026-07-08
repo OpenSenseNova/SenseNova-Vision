@@ -1,0 +1,6 @@
+{
+  "task_name": "Depth",
+  "input": "image.jpg",
+  "output": "gt.png",
+  "prompt": "Estimate relative depth for each pixel in the image, with closer objects appearing brighter and distant objects appearing darker. Output is a grayscale image with pixel values ranging from 0-255."
+}

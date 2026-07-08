@@ -1,0 +1,7 @@
+{
+  "task_name": "OCR",
+  "input": "image.jpg",
+  "output": "gt.png",
+  "base_param": {},
+  "prompt": "Perform word-level text detection and recognition on the entire image. Output a structured text list containing every detected word, its bounding box coordinates with <bbox> format, and the recognized text content."
+}

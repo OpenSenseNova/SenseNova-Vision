@@ -1,0 +1,42 @@
+# Copyright 2026 SenseTime Group Inc. and/or its affiliates.
+# Reference runtime: Linux, Python 3.10, PyTorch 2.5.1, and CUDA 12.4.
+
+accelerate==1.7.0
+bitsandbytes==0.49.2
+decord==0.6.0
+einops==0.8.1
+gradio==5.38.2
+h5py==3.16.0
+huggingface_hub==0.29.1
+matplotlib==3.7.0
+ninja==1.11.1.4
+numpy==1.24.4
+omegaconf==2.3.0
+open3d==0.19.0
+OpenEXR==3.4.13
+opencv_python==4.7.0.72
+packaging==25.0
+pandas==2.3.0
+Pillow==11.2.1
+projectaria-tools==1.2.0
+protobuf==6.31.0
+psutil==7.0.0
+pyarrow==11.0.0
+pycocoevalcap==1.2
+pycocotools==2.0.10
+PyYAML==6.0.2
+Requests==2.32.3
+regex==2024.11.6
+safetensors==0.4.5
+scipy==1.10.1
+sentencepiece==0.1.99
+shapely==2.1.2
+tabulate==0.10.0
+torch==2.5.1
+torchvision==0.20.1
+tqdm==4.67.1
+transformers==4.49.0
+trimesh==4.12.2
+triton==3.1.0; sys_platform == "linux"
+wandb==0.19.11
+xlsxwriter==3.2.9

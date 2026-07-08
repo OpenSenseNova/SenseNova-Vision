@@ -1,0 +1,7 @@
+{
+  "task_name": "Keypoint",
+  "input": "image.jpg",
+  "output": "gt.png",
+  "base_param": {},
+  "prompt": "Detect all instances of <p>antelope</p> in the image. For each instance, output a bounding box in <bbox> format and the coordinates of its left eye, right eye, nose, neck, root of tail, left shoulder, left elbow, left front paw, right shoulder, right elbow, right front paw, left hip, left knee, left back paw, right hip, right knee, right back paw as [x, y] pairs. Return results as a structured list."
+}

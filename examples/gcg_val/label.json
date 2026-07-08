@@ -1,0 +1,7 @@
+{
+  "task_name": "GCG Seg",
+  "input": "image.jpg",
+  "output": "gt.png",
+  "base_param": { },
+  "prompt": "Please briefly describe the contents of the image. Please respond with interleaved segmentation masks for the corresponding parts of the answer."
+}

@@ -1,0 +1,6 @@
+{
+  "task_name": "Open Edit",
+  "input": "image.png",
+  "output": "gt.png",
+  "prompt": "Turn the apples in the picture green."
+}

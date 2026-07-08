@@ -1,0 +1,35 @@
+recon3d_jsonl_sft:
+  dataset_names:
+    - recon3d_jsonl_dl3dv
+    - recon3d_jsonl_scannetpp
+    - recon3d_jsonl_scannetv2
+    - recon3d_jsonl_wildrgbd
+
+  seq_num_frames_range:
+    - 2
+    - 10
+  expand_ratio: 16
+  seq_norm_mean: minmaxcenter_xyz
+  seq_norm_std: maxabs_scalar
+  use_single_pointmap_split: true
+  max_resample_attempts: 3
+
+  image_transform_args:
+    image_stride: 16
+    max_image_size: 512
+    min_image_size: 256
+  vit_image_transform_args:
+    image_stride: 14
+    max_image_size: 448
+    min_image_size: 224
+  pointmap_vae_transform_args:
+    image_stride: 16
+    max_image_size: 512
+    min_image_size: 256
+  pointmap_vit_transform_args:
+    image_stride: 14
+    max_image_size: 448
+    min_image_size: 224
+
+  is_mandatory: false
+  weight: 1

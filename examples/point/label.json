@@ -1,0 +1,7 @@
+{
+  "task_name": "Point Detection",
+  "input": "image.jpg",
+  "output": "gt.png",
+  "base_param": {},
+  "prompt": "Locate and identify <p>airplane</p> within the scene. Output detection results as text entries, each containing the object class and pixel coordinates defining the object point location."
+}

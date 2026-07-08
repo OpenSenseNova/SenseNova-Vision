@@ -1,0 +1,12 @@
+# Copyright 2026 SenseTime Group Inc. and/or its affiliates.
+# Base Linux environment for SenseNova-Vision. Run setup.sh to install this
+# file, Python dependencies, flash-attn, and local evaluation extensions.
+name: sensenova-vision
+channels:
+  - defaults
+dependencies:
+  - openjdk=8
+  - pip=25.1
+  - python=3.10.16
+  - setuptools=78.1.1
+  - wheel=0.45.1

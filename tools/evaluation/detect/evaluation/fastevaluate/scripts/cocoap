@@ -1,0 +1,22 @@
+#!/usr/bin/env python
+import sys
+import fastevaluate as fe
+
+def main():
+    assert len(sys.argv) == 4
+    gt_path = sys.argv[1]
+    pd_path = sys.argv[2]
+    eval_type = sys.argv[3]
+
+    assert eval_type in ['coco', 'cocomask', 'lvis', 'lvismask']
+
+    res = fe.evaluate(
+        gt_path,
+        pd_path,
+        0, # agnostic 1; other 0
+        0, # score threshold
+        eval_type,
+    )
+
+if __name__ == '__main__':
+    main()

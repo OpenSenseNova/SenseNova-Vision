@@ -1,0 +1,6 @@
+{
+  "task_name": "Normal",
+  "input": "image.png",
+  "output": "gt.png",
+  "prompt": "Generate an RGB normal map where R, G, B channels represent X, Y, Z surface directions. The output should show continuous color variations with no discrete regions, unlike segmentation results."
+}

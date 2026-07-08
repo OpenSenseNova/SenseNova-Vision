@@ -1,0 +1,1197 @@
+person:
+  id: 1
+  name: person
+  contiguous_id: 0
+  color:
+  - 220
+  - 20
+  - 60
+  isthing: 1
+bicycle:
+  id: 2
+  name: bicycle
+  contiguous_id: 1
+  color:
+  - 119
+  - 11
+  - 32
+  isthing: 1
+car:
+  id: 3
+  name: car
+  contiguous_id: 2
+  color:
+  - 0
+  - 0
+  - 142
+  isthing: 1
+motorcycle:
+  id: 4
+  name: motorcycle
+  contiguous_id: 3
+  color:
+  - 0
+  - 0
+  - 230
+  isthing: 1
+airplane:
+  id: 5
+  name: airplane
+  contiguous_id: 4
+  color:
+  - 106
+  - 0
+  - 228
+  isthing: 1
+bus:
+  id: 6
+  name: bus
+  contiguous_id: 5
+  color:
+  - 0
+  - 60
+  - 100
+  isthing: 1
+train:
+  id: 7
+  name: train
+  contiguous_id: 6
+  color:
+  - 0
+  - 80
+  - 100
+  isthing: 1
+truck:
+  id: 8
+  name: truck
+  contiguous_id: 7
+  color:
+  - 0
+  - 0
+  - 70
+  isthing: 1
+boat:
+  id: 9
+  name: boat
+  contiguous_id: 8
+  color:
+  - 0
+  - 0
+  - 192
+  isthing: 1
+traffic light:
+  id: 10
+  name: traffic light
+  contiguous_id: 9
+  color:
+  - 250
+  - 170
+  - 30
+  isthing: 1
+fire hydrant:
+  id: 11
+  name: fire hydrant
+  contiguous_id: 10
+  color:
+  - 100
+  - 170
+  - 30
+  isthing: 1
+stop sign:
+  id: 13
+  name: stop sign
+  contiguous_id: 11
+  color:
+  - 220
+  - 220
+  - 0
+  isthing: 1
+parking meter:
+  id: 14
+  name: parking meter
+  contiguous_id: 12
+  color:
+  - 175
+  - 116
+  - 175
+  isthing: 1
+bench:
+  id: 15
+  name: bench
+  contiguous_id: 13
+  color:
+  - 250
+  - 0
+  - 30
+  isthing: 1
+bird:
+  id: 16
+  name: bird
+  contiguous_id: 14
+  color:
+  - 165
+  - 42
+  - 42
+  isthing: 1
+cat:
+  id: 17
+  name: cat
+  contiguous_id: 15
+  color:
+  - 255
+  - 77
+  - 255
+  isthing: 1
+dog:
+  id: 18
+  name: dog
+  contiguous_id: 16
+  color:
+  - 0
+  - 226
+  - 252
+  isthing: 1
+horse:
+  id: 19
+  name: horse
+  contiguous_id: 17
+  color:
+  - 182
+  - 182
+  - 255
+  isthing: 1
+sheep:
+  id: 20
+  name: sheep
+  contiguous_id: 18
+  color:
+  - 0
+  - 82
+  - 0
+  isthing: 1
+cow:
+  id: 21
+  name: cow
+  contiguous_id: 19
+  color:
+  - 120
+  - 166
+  - 157
+  isthing: 1
+elephant:
+  id: 22
+  name: elephant
+  contiguous_id: 20
+  color:
+  - 110
+  - 76
+  - 0
+  isthing: 1
+bear:
+  id: 23
+  name: bear
+  contiguous_id: 21
+  color:
+  - 174
+  - 57
+  - 255
+  isthing: 1
+zebra:
+  id: 24
+  name: zebra
+  contiguous_id: 22
+  color:
+  - 199
+  - 100
+  - 0
+  isthing: 1
+giraffe:
+  id: 25
+  name: giraffe
+  contiguous_id: 23
+  color:
+  - 72
+  - 0
+  - 118
+  isthing: 1
+backpack:
+  id: 27
+  name: backpack
+  contiguous_id: 24
+  color:
+  - 255
+  - 179
+  - 240
+  isthing: 1
+umbrella:
+  id: 28
+  name: umbrella
+  contiguous_id: 25
+  color:
+  - 0
+  - 125
+  - 92
+  isthing: 1
+handbag:
+  id: 31
+  name: handbag
+  contiguous_id: 26
+  color:
+  - 209
+  - 0
+  - 151
+  isthing: 1
+tie:
+  id: 32
+  name: tie
+  contiguous_id: 27
+  color:
+  - 188
+  - 208
+  - 182
+  isthing: 1
+suitcase:
+  id: 33
+  name: suitcase
+  contiguous_id: 28
+  color:
+  - 0
+  - 220
+  - 176
+  isthing: 1
+frisbee:
+  id: 34
+  name: frisbee
+  contiguous_id: 29
+  color:
+  - 255
+  - 99
+  - 164
+  isthing: 1
+skis:
+  id: 35
+  name: skis
+  contiguous_id: 30
+  color:
+  - 92
+  - 0
+  - 73
+  isthing: 1
+snowboard:
+  id: 36
+  name: snowboard
+  contiguous_id: 31
+  color:
+  - 133
+  - 129
+  - 255
+  isthing: 1
+sports ball:
+  id: 37
+  name: sports ball
+  contiguous_id: 32
+  color:
+  - 78
+  - 180
+  - 255
+  isthing: 1
+kite:
+  id: 38
+  name: kite
+  contiguous_id: 33
+  color:
+  - 0
+  - 228
+  - 0
+  isthing: 1
+baseball bat:
+  id: 39
+  name: baseball bat
+  contiguous_id: 34
+  color:
+  - 174
+  - 255
+  - 243
+  isthing: 1
+baseball glove:
+  id: 40
+  name: baseball glove
+  contiguous_id: 35
+  color:
+  - 45
+  - 89
+  - 255
+  isthing: 1
+skateboard:
+  id: 41
+  name: skateboard
+  contiguous_id: 36
+  color:
+  - 134
+  - 134
+  - 103
+  isthing: 1
+surfboard:
+  id: 42
+  name: surfboard
+  contiguous_id: 37
+  color:
+  - 145
+  - 148
+  - 174
+  isthing: 1
+tennis racket:
+  id: 43
+  name: tennis racket
+  contiguous_id: 38
+  color:
+  - 255
+  - 208
+  - 186
+  isthing: 1
+bottle:
+  id: 44
+  name: bottle
+  contiguous_id: 39
+  color:
+  - 197
+  - 226
+  - 255
+  isthing: 1
+wine glass:
+  id: 46
+  name: wine glass
+  contiguous_id: 40
+  color:
+  - 171
+  - 134
+  - 1
+  isthing: 1
+cup:
+  id: 47
+  name: cup
+  contiguous_id: 41
+  color:
+  - 109
+  - 63
+  - 54
+  isthing: 1
+fork:
+  id: 48
+  name: fork
+  contiguous_id: 42
+  color:
+  - 207
+  - 138
+  - 255
+  isthing: 1
+knife:
+  id: 49
+  name: knife
+  contiguous_id: 43
+  color:
+  - 151
+  - 0
+  - 95
+  isthing: 1
+spoon:
+  id: 50
+  name: spoon
+  contiguous_id: 44
+  color:
+  - 9
+  - 80
+  - 61
+  isthing: 1
+bowl:
+  id: 51
+  name: bowl
+  contiguous_id: 45
+  color:
+  - 84
+  - 105
+  - 51
+  isthing: 1
+banana:
+  id: 52
+  name: banana
+  contiguous_id: 46
+  color:
+  - 74
+  - 65
+  - 105
+  isthing: 1
+apple:
+  id: 53
+  name: apple
+  contiguous_id: 47
+  color:
+  - 166
+  - 196
+  - 102
+  isthing: 1
+sandwich:
+  id: 54
+  name: sandwich
+  contiguous_id: 48
+  color:
+  - 208
+  - 195
+  - 210
+  isthing: 1
+orange:
+  id: 55
+  name: orange
+  contiguous_id: 49
+  color:
+  - 255
+  - 109
+  - 65
+  isthing: 1
+broccoli:
+  id: 56
+  name: broccoli
+  contiguous_id: 50
+  color:
+  - 0
+  - 143
+  - 149
+  isthing: 1
+carrot:
+  id: 57
+  name: carrot
+  contiguous_id: 51
+  color:
+  - 179
+  - 0
+  - 194
+  isthing: 1
+hot dog:
+  id: 58
+  name: hot dog
+  contiguous_id: 52
+  color:
+  - 209
+  - 99
+  - 106
+  isthing: 1
+pizza:
+  id: 59
+  name: pizza
+  contiguous_id: 53
+  color:
+  - 5
+  - 121
+  - 0
+  isthing: 1
+donut:
+  id: 60
+  name: donut
+  contiguous_id: 54
+  color:
+  - 227
+  - 255
+  - 205
+  isthing: 1
+cake:
+  id: 61
+  name: cake
+  contiguous_id: 55
+  color:
+  - 147
+  - 186
+  - 208
+  isthing: 1
+chair:
+  id: 62
+  name: chair
+  contiguous_id: 56
+  color:
+  - 153
+  - 69
+  - 1
+  isthing: 1
+couch:
+  id: 63
+  name: couch
+  contiguous_id: 57
+  color:
+  - 3
+  - 95
+  - 161
+  isthing: 1
+potted plant:
+  id: 64
+  name: potted plant
+  contiguous_id: 58
+  color:
+  - 163
+  - 255
+  - 0
+  isthing: 1
+bed:
+  id: 65
+  name: bed
+  contiguous_id: 59
+  color:
+  - 119
+  - 0
+  - 170
+  isthing: 1
+dining table:
+  id: 67
+  name: dining table
+  contiguous_id: 60
+  color:
+  - 0
+  - 182
+  - 199
+  isthing: 1
+toilet:
+  id: 70
+  name: toilet
+  contiguous_id: 61
+  color:
+  - 0
+  - 165
+  - 120
+  isthing: 1
+tv:
+  id: 72
+  name: tv
+  contiguous_id: 62
+  color:
+  - 183
+  - 130
+  - 88
+  isthing: 1
+laptop:
+  id: 73
+  name: laptop
+  contiguous_id: 63
+  color:
+  - 95
+  - 32
+  - 0
+  isthing: 1
+mouse:
+  id: 74
+  name: mouse
+  contiguous_id: 64
+  color:
+  - 130
+  - 114
+  - 135
+  isthing: 1
+remote:
+  id: 75
+  name: remote
+  contiguous_id: 65
+  color:
+  - 110
+  - 129
+  - 133
+  isthing: 1
+keyboard:
+  id: 76
+  name: keyboard
+  contiguous_id: 66
+  color:
+  - 166
+  - 74
+  - 118
+  isthing: 1
+cell phone:
+  id: 77
+  name: cell phone
+  contiguous_id: 67
+  color:
+  - 219
+  - 142
+  - 185
+  isthing: 1
+microwave:
+  id: 78
+  name: microwave
+  contiguous_id: 68
+  color:
+  - 79
+  - 210
+  - 114
+  isthing: 1
+oven:
+  id: 79
+  name: oven
+  contiguous_id: 69
+  color:
+  - 178
+  - 90
+  - 62
+  isthing: 1
+toaster:
+  id: 80
+  name: toaster
+  contiguous_id: 70
+  color:
+  - 65
+  - 70
+  - 15
+  isthing: 1
+sink:
+  id: 81
+  name: sink
+  contiguous_id: 71
+  color:
+  - 127
+  - 167
+  - 115
+  isthing: 1
+refrigerator:
+  id: 82
+  name: refrigerator
+  contiguous_id: 72
+  color:
+  - 59
+  - 105
+  - 106
+  isthing: 1
+book:
+  id: 84
+  name: book
+  contiguous_id: 73
+  color:
+  - 142
+  - 108
+  - 45
+  isthing: 1
+clock:
+  id: 85
+  name: clock
+  contiguous_id: 74
+  color:
+  - 196
+  - 172
+  - 0
+  isthing: 1
+vase:
+  id: 86
+  name: vase
+  contiguous_id: 75
+  color:
+  - 95
+  - 54
+  - 80
+  isthing: 1
+scissors:
+  id: 87
+  name: scissors
+  contiguous_id: 76
+  color:
+  - 128
+  - 76
+  - 255
+  isthing: 1
+teddy bear:
+  id: 88
+  name: teddy bear
+  contiguous_id: 77
+  color:
+  - 201
+  - 57
+  - 1
+  isthing: 1
+hair drier:
+  id: 89
+  name: hair drier
+  contiguous_id: 78
+  color:
+  - 246
+  - 0
+  - 122
+  isthing: 1
+toothbrush:
+  id: 90
+  name: toothbrush
+  contiguous_id: 79
+  color:
+  - 191
+  - 162
+  - 208
+  isthing: 1
+banner:
+  id: 92
+  name: banner
+  contiguous_id: 80
+  color:
+  - 255
+  - 255
+  - 128
+  isthing: 0
+blanket:
+  id: 93
+  name: blanket
+  contiguous_id: 81
+  color:
+  - 147
+  - 211
+  - 203
+  isthing: 0
+bridge:
+  id: 95
+  name: bridge
+  contiguous_id: 82
+  color:
+  - 150
+  - 100
+  - 100
+  isthing: 0
+cardboard:
+  id: 100
+  name: cardboard
+  contiguous_id: 83
+  color:
+  - 168
+  - 171
+  - 172
+  isthing: 0
+counter:
+  id: 107
+  name: counter
+  contiguous_id: 84
+  color:
+  - 146
+  - 112
+  - 198
+  isthing: 0
+curtain:
+  id: 109
+  name: curtain
+  contiguous_id: 85
+  color:
+  - 210
+  - 170
+  - 100
+  isthing: 0
+door:
+  id: 112
+  name: door-stuff
+  contiguous_id: 86
+  color:
+  - 92
+  - 136
+  - 89
+  isthing: 0
+floor wood:
+  id: 118
+  name: floor-wood
+  contiguous_id: 87
+  color:
+  - 218
+  - 88
+  - 184
+  isthing: 0
+flower:
+  id: 119
+  name: flower
+  contiguous_id: 88
+  color:
+  - 241
+  - 129
+  - 0
+  isthing: 0
+fruit:
+  id: 122
+  name: fruit
+  contiguous_id: 89
+  color:
+  - 217
+  - 17
+  - 255
+  isthing: 0
+gravel:
+  id: 125
+  name: gravel
+  contiguous_id: 90
+  color:
+  - 124
+  - 74
+  - 181
+  isthing: 0
+house:
+  id: 128
+  name: house
+  contiguous_id: 91
+  color:
+  - 70
+  - 70
+  - 70
+  isthing: 0
+light:
+  id: 130
+  name: light
+  contiguous_id: 92
+  color:
+  - 255
+  - 228
+  - 255
+  isthing: 0
+mirror:
+  id: 133
+  name: mirror-stuff
+  contiguous_id: 93
+  color:
+  - 154
+  - 208
+  - 0
+  isthing: 0
+net:
+  id: 138
+  name: net
+  contiguous_id: 94
+  color:
+  - 193
+  - 0
+  - 92
+  isthing: 0
+pillow:
+  id: 141
+  name: pillow
+  contiguous_id: 95
+  color:
+  - 76
+  - 91
+  - 113
+  isthing: 0
+platform:
+  id: 144
+  name: platform
+  contiguous_id: 96
+  color:
+  - 255
+  - 180
+  - 195
+  isthing: 0
+playingfield:
+  id: 145
+  name: playingfield
+  contiguous_id: 97
+  color:
+  - 106
+  - 154
+  - 176
+  isthing: 0
+railroad:
+  id: 147
+  name: railroad
+  contiguous_id: 98
+  color:
+  - 230
+  - 150
+  - 140
+  isthing: 0
+river:
+  id: 148
+  name: river
+  contiguous_id: 99
+  color:
+  - 60
+  - 143
+  - 255
+  isthing: 0
+road:
+  id: 149
+  name: road
+  contiguous_id: 100
+  color:
+  - 128
+  - 64
+  - 128
+  isthing: 0
+roof:
+  id: 151
+  name: roof
+  contiguous_id: 101
+  color:
+  - 92
+  - 82
+  - 55
+  isthing: 0
+sand:
+  id: 154
+  name: sand
+  contiguous_id: 102
+  color:
+  - 254
+  - 212
+  - 124
+  isthing: 0
+sea:
+  id: 155
+  name: sea
+  contiguous_id: 103
+  color:
+  - 73
+  - 77
+  - 174
+  isthing: 0
+shelf:
+  id: 156
+  name: shelf
+  contiguous_id: 104
+  color:
+  - 255
+  - 160
+  - 98
+  isthing: 0
+snow:
+  id: 159
+  name: snow
+  contiguous_id: 105
+  color:
+  - 255
+  - 255
+  - 255
+  isthing: 0
+stairs:
+  id: 161
+  name: stairs
+  contiguous_id: 106
+  color:
+  - 104
+  - 84
+  - 109
+  isthing: 0
+tent:
+  id: 166
+  name: tent
+  contiguous_id: 107
+  color:
+  - 169
+  - 164
+  - 131
+  isthing: 0
+towel:
+  id: 168
+  name: towel
+  contiguous_id: 108
+  color:
+  - 225
+  - 199
+  - 255
+  isthing: 0
+wall brick:
+  id: 171
+  name: wall-brick
+  contiguous_id: 109
+  color:
+  - 137
+  - 54
+  - 74
+  isthing: 0
+wall stone:
+  id: 175
+  name: wall-stone
+  contiguous_id: 110
+  color:
+  - 135
+  - 158
+  - 223
+  isthing: 0
+wall tile:
+  id: 176
+  name: wall-tile
+  contiguous_id: 111
+  color:
+  - 7
+  - 246
+  - 231
+  isthing: 0
+wall wood:
+  id: 177
+  name: wall-wood
+  contiguous_id: 112
+  color:
+  - 107
+  - 255
+  - 200
+  isthing: 0
+water:
+  id: 178
+  name: water-other
+  contiguous_id: 113
+  color:
+  - 58
+  - 41
+  - 149
+  isthing: 0
+window blind:
+  id: 180
+  name: window-blind
+  contiguous_id: 114
+  color:
+  - 183
+  - 121
+  - 142
+  isthing: 0
+window:
+  id: 181
+  name: window-other
+  contiguous_id: 115
+  color:
+  - 255
+  - 73
+  - 97
+  isthing: 0
+tree:
+  id: 184
+  name: tree-merged
+  contiguous_id: 116
+  color:
+  - 107
+  - 142
+  - 35
+  isthing: 0
+fence:
+  id: 185
+  name: fence-merged
+  contiguous_id: 117
+  color:
+  - 190
+  - 153
+  - 153
+  isthing: 0
+ceiling:
+  id: 186
+  name: ceiling-merged
+  contiguous_id: 118
+  color:
+  - 146
+  - 139
+  - 141
+  isthing: 0
+sky:
+  id: 187
+  name: sky-other-merged
+  contiguous_id: 119
+  color:
+  - 70
+  - 130
+  - 180
+  isthing: 0
+cabinet:
+  id: 188
+  name: cabinet-merged
+  contiguous_id: 120
+  color:
+  - 134
+  - 199
+  - 156
+  isthing: 0
+table:
+  id: 189
+  name: table-merged
+  contiguous_id: 121
+  color:
+  - 209
+  - 226
+  - 140
+  isthing: 0
+floor:
+  id: 190
+  name: floor-other-merged
+  contiguous_id: 122
+  color:
+  - 96
+  - 36
+  - 108
+  isthing: 0
+pavement:
+  id: 191
+  name: pavement-merged
+  contiguous_id: 123
+  color:
+  - 96
+  - 96
+  - 96
+  isthing: 0
+mountain:
+  id: 192
+  name: mountain-merged
+  contiguous_id: 124
+  color:
+  - 64
+  - 170
+  - 64
+  isthing: 0
+grass:
+  id: 193
+  name: grass-merged
+  contiguous_id: 125
+  color:
+  - 152
+  - 251
+  - 152
+  isthing: 0
+dirt:
+  id: 194
+  name: dirt-merged
+  contiguous_id: 126
+  color:
+  - 208
+  - 229
+  - 228
+  isthing: 0
+paper:
+  id: 195
+  name: paper-merged
+  contiguous_id: 127
+  color:
+  - 206
+  - 186
+  - 171
+  isthing: 0
+food:
+  id: 196
+  name: food-other-merged
+  contiguous_id: 128
+  color:
+  - 152
+  - 161
+  - 64
+  isthing: 0
+building:
+  id: 197
+  name: building-other-merged
+  contiguous_id: 129
+  color:
+  - 116
+  - 112
+  - 0
+  isthing: 0
+rock:
+  id: 198
+  name: rock-merged
+  contiguous_id: 130
+  color:
+  - 0
+  - 114
+  - 143
+  isthing: 0
+wall:
+  id: 199
+  name: wall-other-merged
+  contiguous_id: 131
+  color:
+  - 102
+  - 102
+  - 156
+  isthing: 0
+rug:
+  id: 200
+  name: rug-merged
+  contiguous_id: 132
+  color:
+  - 250
+  - 141
+  - 255
+  isthing: 0

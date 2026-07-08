@@ -1,0 +1,975 @@
+# Copyright 2026 SenseTime Group Inc. and/or its affiliates.
+seg_instance_sft:
+  dataset_names:
+    - coconut_b
+    - coconut_l
+    - coconut_xl
+    - Cityscapes_panoptic
+    - Hypersim_panoptic
+    - Entity_panoptic
+    - Trashcan_panoptic
+    - Pidray_panoptic
+    - ZeroWaste_panoptic
+    - LVIS_panoptic
+    - IDD-1_panoptic
+    - IDD-2_panoptic
+    - IDDA_panoptic 
+    - MapillaryVistas_panoptic
+    - nuImages_panoptic
+    - 51World_panoptic
+    - StreetHazards_panoptic
+    - KITTI_panoptic
+    - TAS500_panoptic
+    - UDD5_panoptic
+    - UDD6_panoptic
+    - TTPLA_panoptic
+    - LoveDA_panoptic
+    - VIPSeg_panoptic
+  think_mode: True
+  image_transform_args:
+    image_stride: 16
+    max_image_size: 1024
+    min_image_size: 512
+  vit_image_transform_args:
+    image_stride: 14
+    max_image_size: 980
+    min_image_size: 224
+  shuffle_lines: True
+  shuffle_seed: 0
+  task_prompt: nature_promt
+  num_used_data:
+    - 241602
+    - 103010
+    - 242640
+    - 2975
+    - 46835
+    - 31677
+    - 5936
+    - 29454
+    - 2947
+    - 56740
+    - 6984
+    - 7034
+    - 6240
+    - 18000
+    - 65547
+    - 11588
+    - 6156
+    - 5027
+    - 440
+    - 120
+    - 106
+    - 1242
+    - 2522
+    - 66767
+  weight: 0.75
+
+seg_gcg_sft:
+  dataset_names:
+    - gcg_grandf
+    - gcg_refcocog
+    - gcg_psg
+    - gcg_flickr
+    - Cityscapes_panoptic_gcg_recaption
+    - Hypersim_panoptic_gcg_recaption
+    - Entity_panoptic_gcg_recaption
+    - IDDA_panoptic_gcg_recaption
+    - 51World_panoptic_gcg_recaption
+    - StreetHazards_panoptic_gcg_recaption
+    - KITTI_panoptic_gcg_recaption
+    - TAS500_panoptic_gcg_recaption
+    - UDD5_panoptic_gcg_recaption
+    - UDD6_panoptic_gcg_recaption
+    - LoveDA_panoptic_gcg_recaption
+    - VIPSeg_panoptic_gcg_recaption
+  think_mode: True
+  image_transform_args:
+    image_stride: 16
+    max_image_size: 1024
+    min_image_size: 512
+  vit_image_transform_args:
+    image_stride: 14
+    max_image_size: 980
+    min_image_size: 224
+  shuffle_lines: True
+  shuffle_seed: 0
+  task_prompt: nature_promt
+  num_used_data:
+    - 1000
+    - 19327
+    - 27786
+    - 148157
+    - 2094
+    - 30352
+    - 6137
+    - 1084
+    - 3522
+    - 966
+    - 3490
+    - 290
+    - 43
+    - 58
+    - 1550
+    - 59524
+  # Keep recaption datasets with >1000 successes, plus small/high-success-rate
+  # datasets that are not distribution-heavy.
+  weight: 0.25
+
+seg_sft:
+  dataset_names:
+    - refcoco_train
+    - refcoc+_train
+    - refcocog_train
+    - refclef_train
+    - grefcoco_train
+    - rea_train
+    - coco_interactive_psalm
+    - DOORS
+    - NDISPark
+    - MinneApple
+    - EYTH
+    - PST900
+    - PSTRGB
+    - SUIM
+    - MyFood
+    - CO-SKEL
+    - VIS2022
+    - MVTecD2S
+    - VizWiz-FewShot
+    - Trans10K
+    - CIHP
+    - ATR
+    - LIP
+    - FAT-single
+    - FAT-mixed
+    - Fashionpedia
+    - PartImageNet
+    - PartImageNet-Whole
+    - WaterOVS
+    - RaidaR-rainy
+    - RaidaR-sunny
+    - FSS-1000
+    - DAVIS
+    - OCID
+    - PIC
+    - LaPa
+    - DeepFashion2
+    - MattingHumanHalf
+  image_transform_args:
+    image_stride: 16
+    max_image_size: 1024
+    min_image_size: 512
+  vit_image_transform_args:
+    image_stride: 14
+    max_image_size: 980
+    min_image_size: 224
+  shuffle_lines: True
+  shuffle_seed: 0
+  task_prompt: no_prefix_promt
+  num_used_data:
+    - 202181
+    - 201534
+    - 141998
+    - 220665
+    - 353347
+    - 132600
+    - 400000
+    - 6495
+    - 112
+    - 497
+    - 330
+    - 345
+    - 1413
+    - 2514
+    - 1000
+    - 348
+    - 11677
+    - 2503
+    - 2991
+    - 2672
+    - 15019
+    - 11296
+    - 14348
+    - 6139
+    - 13350
+    - 13286
+    - 8505
+    - 26301
+    - 2824
+    - 1455
+    - 939
+    - 3735
+    - 2358
+    - 3017
+    - 8695
+    - 8115
+    - 20776
+    - 6945
+  # RefSeg/ReaSeg share the binary segmentation task definition with the long-tail
+  # seg_sft data. Keep ref/rea/coco-interactive first, drop the extra inter
+  # sources, and cap the long-tail binary data at 200k with sqrt-size sampling.
+  weight: 1.0
+
+vlm_sft:
+  dataset_names:
+    - llava_v1_5
+    - finevision_image
+    - finevision_multi_image
+    - mammoth_image
+    - mammoth_text
+    - finevision_text
+  image_transform_args:
+    image_stride: 14
+    max_image_size: 980
+    min_image_size: 378
+    max_pixels: 2_007_040
+  frame_sampler_args:
+    max_num_frames: 12
+    min_num_frames: 8
+  is_mandatory: false
+  shuffle_lines: True
+  shuffle_seed: 0
+  num_used_data:
+    - 624254
+    - 200000
+    - 100000
+    - 200000
+    - 10000
+    - 10000
+  weight: 1.5
+
+t2i_general:
+  dataset_names:
+    - BLIP3o-Pretrain-Long-Caption
+    - BLIP3o-Pretrain-Short-Caption
+    # - DenseFusion-1M
+    # - laion-aesthetics
+    - BLIP3o-Long-part2
+  image_transform_args:
+    image_stride: 16
+    max_image_size: 1024
+    min_image_size: 512
+  is_mandatory: false
+  shuffle_lines: True
+  shuffle_seed: 0
+  num_used_data:
+    - 2000000
+    - 2000000
+    # - 200000
+    # - 200000
+    - 2000000
+  weight: 1.5
+
+general_edit:
+  dataset_names:
+    - Nano-consistent-150k
+    - multi_edit
+    - ShareGPT_4o_edit
+    - GPT_Image_Edit_OmniEdit
+    - GPT_Image_Edit_HQEdit
+    - GPT_Image_Edit_UltraEdit
+  image_transform_args:
+    image_stride: 16
+    max_image_size: 1024
+    min_image_size: 512
+  vit_image_transform_args:
+    image_stride: 14
+    max_image_size: 518
+    min_image_size: 224
+  is_mandatory: false
+  num_used_data:
+    - 123268
+    - 106532
+    - 46539
+    - 1270385
+    - 183182
+    - 100008
+  weight: 0.75
+
+cv_depth:
+  dataset_names:
+    - hypersim_depth
+    - vkitti_depth
+    - IRS_depth
+    - tartanair_depth
+    - tartanair_addition_depth
+    - IRS_addition_depth
+    - scenenet_rgbd_depth
+    - taskonomy_depth
+    #- scannetv2_depth
+    - scannetpp_depth
+    - coco_depth
+    - sa_1b_depth
+    - object365_depth
+    # - BlendedMVS_depthanythingv2_edit
+  image_transform_args:
+    image_stride: 16
+    max_image_size: 1024
+    min_image_size: 512
+  vit_image_transform_args:
+    image_stride: 14
+    max_image_size: 980
+    min_image_size: 224
+  task_prompt: depth_promt
+  num_used_data:
+    - 61432
+    - 17008
+    - 24614
+    - 42521
+    - 75514
+    - 49236
+    - 2273316
+    - 2000000
+    #- 248402
+    - 812765
+    - 77870
+    - 4441957
+    - 1317199
+    # - 7698
+  weight: 0.67
+
+cv_normal:
+  dataset_names:
+    - hypersim_normal
+    - interiorverse_normal
+    - IRS_normal
+    - tartanair_normal
+    - IRS_addition_normal
+    - coco_normal
+    - SA_1B_normal
+    - scenenet_rgbd_normal
+    #- scannetv2_normal
+    - scannetpp_normal
+    - taskonomy_normal
+    - object365_normal
+  image_transform_args:
+    image_stride: 16
+    max_image_size: 1024
+    min_image_size: 512
+  vit_image_transform_args:
+    image_stride: 14
+    max_image_size: 980
+    min_image_size: 224
+  task_prompt: normal_promt
+  num_used_data:
+    - 72655
+    - 26557
+    - 34439
+    - 117855
+    - 68877
+    - 78801
+    - 4462151
+    - 2379750
+    #- 248402
+    - 812765
+    - 2000000
+    - 1317199
+  weight: 0.67
+
+cv_detection_bbox:
+  dataset_names:
+    - grounding_SA1B
+    - APT_detect
+    - DeepFashion_detect
+    - EgoObjects_detect
+    - HumanParts_detect
+    - ImageNetPart_detect
+    - Objects365_detect
+    - PACO_LVIS_detect
+    # - V3Det_detect
+    - V3Det_ovd_detect
+  image_transform_args:
+    image_stride: 14
+    max_image_size: 980
+    min_image_size: 378
+    max_pixels: 2_007_040
+  frame_sampler_args:
+    max_num_frames: 12
+    min_num_frames: 8
+  shuffle_lines: True
+  shuffle_seed: 0
+  task_prompt: box_detect_promt
+  num_used_data:
+    - 3119384
+    - 28471
+    - 191961
+    - 78895
+    - 12000
+    - 16523
+    - 1742289
+    - 45790
+    # - 163331
+    - 116182
+  weight: 0.375
+
+cv_detection_point:
+  dataset_names:
+    - pixmo_pointing
+    - SA1B_pointing
+    - Objects365_pointing
+    - APT_pointing
+    - DeepFashion_pointing
+    - EgoObjects_pointing
+    - HumanParts_pointing
+    - ImageNetPart_pointing
+    - PACO_LVIS_pointing
+    - V3Det_ovd_pointing
+    # - V3Det_pointing
+  image_transform_args:
+    image_stride: 14
+    max_image_size: 980
+    min_image_size: 378
+    max_pixels: 2_007_040
+  frame_sampler_args:
+    max_num_frames: 12
+    min_num_frames: 8
+  shuffle_lines: True
+  shuffle_seed: 0
+  task_prompt: point_detect_promt
+  num_used_data:
+    - 1704004
+    - 3046766
+    - 1683149
+    - 23235
+    - 176926
+    - 78068
+    - 11605
+    - 16196
+    - 42246
+    - 95561
+    # - 140232
+  weight: 0.25
+
+cv_detection_point_dense:
+  dataset_names:
+    - BDD100K_pointing
+    - DOTAv2_pointing
+    - FAIR1M_pointing
+    - NuImages_pointing
+    - VisDrone_pointing
+    - FSC147_pointing
+  image_transform_args:
+    image_stride: 14
+    max_image_size: 980
+    min_image_size: 378
+    max_pixels: 2_007_040
+  frame_sampler_args:
+    max_num_frames: 12
+    min_num_frames: 8
+  shuffle_lines: True
+  shuffle_seed: 0
+  task_prompt: point_detect_promt
+  num_used_data:
+    - 68502
+    - 1700
+    - 16363
+    - 55671
+    - 6411
+    - 3659
+  weight: 0.25
+
+cv_detection_bbox_dense:
+  dataset_names:
+    - Locount_detect
+    - LVIS_Fruits_And_Vegetables_detect
+    - Shoes_data_detect
+    - pixmo_detect
+    - blood_cell_detect
+    - sheep_detect
+    - pill_detect
+    - WiderPerson_detect
+    - METU_ALET_detect
+    - homeobjects_detect
+    - football_detect
+    - FiftyOne_detect
+    - CrowdHuman_detect
+    - GroceryStore_detect
+    - Industrial_Site_Safety_detect
+    - TinyPerson_detect
+    - TinyPerson_dense_detect
+    - S2TLD_dense_detect
+    - BDD100K_detect
+    - DOTAv2_detect
+    - FAIR1M_detect
+    - NuImages_detect
+    - VisDrone_detect
+    - CARPK_detect
+    - owdod_detect
+    - SKU110k_detect
+    - FSC147_detect
+  image_transform_args:
+    image_stride: 14
+    max_image_size: 980
+    min_image_size: 378
+    max_pixels: 2_007_040
+  frame_sampler_args:
+    max_num_frames: 12
+    min_num_frames: 8
+  shuffle_lines: True
+  shuffle_seed: 0
+  task_prompt: box_detect_promt
+  num_used_data:
+    - 34021
+    - 6721
+    - 135
+    - 121
+    - 255
+    - 3602
+    - 51
+    - 9000
+    - 2088
+    - 2285
+    - 858
+    - 8001
+    - 3484
+    - 1844
+    - 327
+    - 745
+    - 793
+    - 5037
+    - 70000
+    - 1824
+    - 16488
+    - 60668
+    - 6465
+    - 1098
+    - 8001
+    - 28264
+    - 1814
+  weight: 0.25
+
+cv_detection_bbox_referring:
+  dataset_names:
+    - openimages_refbbox_merge
+    - object365_refbbox_merge
+    - humanref_ref_detect
+    - refcoco_ref_detect
+    - refcoco_plus_ref_detect
+    - refcocog_ref_detect
+    - rexverse_onesentense_ref_detect
+    - rexverse_referring_ref_detect
+  image_transform_args:
+    image_stride: 14
+    max_image_size: 980
+    min_image_size: 378
+    max_pixels: 2_007_040
+  frame_sampler_args:
+    max_num_frames: 12
+    min_num_frames: 8
+  task_prompt: box_detect_promt
+  shuffle_lines: True
+  shuffle_seed: 0
+  num_used_data:
+    - 2017823
+    - 2026308
+    - 37057
+    - 120624
+    - 120191
+    - 80506
+    - 415050
+    - 415050
+  weight: 0.25
+
+cv_detection_point_referring:
+  dataset_names:
+    - grounding_humanref_pointing
+    - grounding_refcoco_pointing
+    - grounding_refcoco_plus_pointing
+    - grounding_refcocog_pointing
+    - grounding_rexverse_onesentense_pointing
+    - grounding_rexverse_referring_pointing
+    - openimages_refpoint_merge
+    - object365_refpoint_merge
+  image_transform_args:
+    image_stride: 14
+    max_image_size: 980
+    min_image_size: 378
+    max_pixels: 2_007_040
+  frame_sampler_args:
+    max_num_frames: 12
+    min_num_frames: 8
+  task_prompt: point_detect_promt
+  shuffle_lines: True
+  shuffle_seed: 0
+  num_used_data:
+    - 6490
+    - 99265
+    - 98875
+    - 62567
+    - 401200
+    - 401200
+    - 2017823
+    - 1563542
+  weight: 0.25
+
+cv_detection_ocr_text_box:
+  dataset_names:
+    - Hiertext_text_bbox_OCR
+    - icdar2019_text_bbox_OCR
+    - LSVT2019_text_bbox_OCR
+    - RCTW_text_bbox_OCR
+    - ReCTS_text_bbox_OCR
+    - SROIE_text_bbox_OCR
+    - wildreceipt_text_bbox
+    - blip3_ocr_200m_text_bbox
+    - mtwi_text_bbox
+  image_transform_args:
+    image_stride: 14
+    max_image_size: 980
+    min_image_size: 378
+    max_pixels: 2_007_040
+  frame_sampler_args:
+    max_num_frames: 12
+    min_num_frames: 8
+  task_prompt: OCR_textline_promt
+  shuffle_lines: True
+  shuffle_seed: 0
+  num_used_data:
+    - 8281
+    - 2757
+    - 29992
+    - 8020
+    - 19998
+    - 626
+    - 1267
+    - 399885
+    - 10045
+  weight: 0.25
+
+cv_detection_ocr_text_poly:
+  dataset_names:
+    - Hiertext_text_poly_OCR
+    - icdar2019_text_poly_OCR
+    - LSVT2019_text_poly_OCR
+    - ReCTS_text_poly_OCR
+    - blip3_ocr_200m_text_poly_OCR
+    - mtwi_text_poly_OCR
+  image_transform_args:
+    image_stride: 14
+    max_image_size: 980
+    min_image_size: 378
+    max_pixels: 2_007_040
+  frame_sampler_args:
+    max_num_frames: 12
+    min_num_frames: 8
+  task_prompt: OCR_textline_polygon_promt
+  shuffle_lines: True
+  shuffle_seed: 0
+  num_used_data:
+    - 8281
+    - 2757
+    - 29992
+    - 19998
+    - 399885
+    - 10045
+  weight: 0.25
+
+cv_detection_ocr_word_box:
+  dataset_names:
+    - Hiertext_word_bbox_OCR
+    - icdar2013_word_bbox_OCR
+    - icdar2015_word_bbox_OCR
+    - icdar2019_word_bbox_OCR
+    - LSVT2019_word_bbox_OCR
+    - RCTW_word_bbox_OCR
+    - ReCTS_word_bbox_OCR
+    - TextOCR_word_bbox_OCR
+    - blip3_ocr_200m_word_bbox_OCR
+    - SynthText_word_bbox_OCR
+    - mtwi_word_bbox_OCR
+  image_transform_args:
+    image_stride: 14
+    max_image_size: 980
+    min_image_size: 378
+    max_pixels: 2_007_040
+  frame_sampler_args:
+    max_num_frames: 12
+    min_num_frames: 8
+  task_prompt: OCR_word_promt
+  shuffle_lines: True
+  shuffle_seed: 0
+  num_used_data:
+    - 8281
+    - 229
+    - 979
+    - 2846
+    - 29992
+    - 8020
+    - 19998
+    - 21778
+    - 392141
+    - 858750
+    - 10045
+  weight: 0.25
+
+cv_detection_ocr_word_poly:
+  dataset_names:
+    - Hiertext_word_poly_OCR
+    - icdar2015_word_poly_OCR
+    - icdar2019_word_poly_OCR
+    - LSVT2019_word_poly_OCR
+    - ReCTS_word_poly_OCR
+    - TextOCR_word_poly_OCR
+    - blip3_ocr_200m_word_poly_OCR
+    - SynthText_word_poly_OCR
+    - mtwi_word_poly_OCR
+  image_transform_args:
+    image_stride: 14
+    max_image_size: 980
+    min_image_size: 378
+    max_pixels: 2_007_040
+  frame_sampler_args:
+    max_num_frames: 12
+    min_num_frames: 8
+  task_prompt: OCR_word_polygon_promt
+  shuffle_lines: True
+  shuffle_seed: 0
+  num_used_data:
+    - 8281
+    - 979
+    - 2846
+    - 29992
+    - 19998
+    - 21778
+    - 392141
+    - 858750
+    - 10045
+  weight: 0.25
+
+cv_detection_visual:
+  dataset_names:
+    - LVIS_Fruits_And_Vegetables_visual
+    - Locount_visual
+    - blood_cell_visual
+    - sheep_visual
+    - pill_visual
+    - WiderPerson_visual
+    - METU_ALET_visual
+    - homeobjects_visual
+    - football_visual
+    - FiftyOne_visual
+    - CrowdHuman_visual
+    - GroceryStore_visual
+    - Industrial_Site_Safety_visual
+    - TinyPerson_visual
+    - S2TLD_visual
+    - CARPK_visual
+    - owdod_visual
+    - SKU110k_visual
+    - BDD100K_visual
+    - DOTAv2_visual
+    - FAIR1M_visual
+    - VisDrone_visual
+    - fish_visual
+    - Objects365_visual
+    - SA_1B_visual
+    - FSC147_visual
+  image_transform_args:
+    image_stride: 14
+    max_image_size: 980
+    min_image_size: 378
+    max_pixels: 2_007_040
+  frame_sampler_args:
+    max_num_frames: 12
+    min_num_frames: 8
+  task_prompt: no_prefix_promt
+  shuffle_lines: True
+  shuffle_seed: 0
+  num_used_data:
+    - 11138
+    - 34021
+    - 255
+    - 3602
+    - 51
+    - 9000
+    - 2088
+    - 2285
+    - 858
+    - 8001
+    - 3484
+    - 1844
+    - 327
+    - 745
+    - 5037
+    - 1098
+    - 8001
+    - 28264
+    - 70000
+    - 1824
+    - 16488
+    - 6465
+    - 628
+    - 2268587
+    - 4947064
+    - 1814
+  weight: 0.25
+
+cv_detection_keypoint:
+  dataset_names:
+    - ap-10k_keypoint
+    - APT36k_keypoint
+    - coco2017_keypoint
+    - crowdpose_keypoint
+    - Human-Art_keypoint
+    - macaquepose_v1_keypoint
+    - mpii_keypoint
+    - ochuman_keypoint
+  image_transform_args:
+    image_stride: 14
+    max_image_size: 980
+    min_image_size: 378
+    max_pixels: 2007040
+  frame_sampler_args:
+    max_num_frames: 12
+    min_num_frames: 8
+  is_mandatory: false
+  shuffle_lines: True
+  shuffle_seed: 0
+  task_prompt: no_prefix_promt
+  num_used_data:
+    - 9741
+    - 35402
+    - 56599
+    - 10000
+    - 33249
+    - 1301
+    - 17408
+    - 3293
+  weight: 0.1875
+
+cv_detection_layout:
+  dataset_names:
+    - CDLA_Layout
+    - DocLayNet_core_Layout
+    - publaynet_Layout
+    - TableBank_Layout
+    - TabRecSet_Layout
+  image_transform_args:
+    image_stride: 14
+    max_image_size: 980
+    min_image_size: 378
+    max_pixels: 2007040
+  frame_sampler_args:
+    max_num_frames: 12
+    min_num_frames: 8
+  is_mandatory: false
+  shuffle_lines: True
+  shuffle_seed: 0
+  task_prompt: no_prefix_promt
+  num_used_data:
+    - 5000
+    - 69103
+    - 335703
+    - 260582
+    - 32072
+  weight: 0.1875
+
+cv_detection_gui:
+  dataset_names:
+    - OS-Atlas-data_desktop_domain_GUI
+    - OS-Atlas-data_mobile_domain_GUI
+    - OS-Atlas-data_rico_GUI
+    - OS-Atlas-data_web_domain_GUI
+    - ShowUI-desktop_GUI
+    - ui_refexp_GUI
+  image_transform_args:
+    image_stride: 14
+    max_image_size: 980
+    min_image_size: 378
+    max_pixels: 2007040
+  frame_sampler_args:
+    max_num_frames: 12
+    min_num_frames: 8
+  is_mandatory: false
+  shuffle_lines: True
+  shuffle_seed: 0
+  task_prompt: no_prefix_promt
+  num_used_data:
+    - 1136719
+    - 1309167
+    - 101426
+    - 12962897
+    - 7496
+    - 15624
+  weight: 0.1875
+
+recon3d_jsonl_sft:
+  dataset_names:
+    - recon3d_jsonl_dl3dv
+    - recon3d_jsonl_scannetpp
+    - recon3d_jsonl_scannetv2
+    - recon3d_jsonl_wildrgbd
+
+  seq_num_frames_range:
+    - 2
+    - 10
+  expand_ratio: 16
+  seq_norm_mean: minmaxcenter_xyz
+  seq_norm_std: maxabs_scalar
+  use_single_pointmap_split: true
+  max_resample_attempts: 3
+
+  image_transform_args:
+    image_stride: 16
+    max_image_size: 512
+    min_image_size: 256
+  vit_image_transform_args:
+    image_stride: 14
+    max_image_size: 448
+    min_image_size: 224
+  pointmap_vae_transform_args:
+    image_stride: 16
+    max_image_size: 512
+    min_image_size: 256
+  pointmap_vit_transform_args:
+    image_stride: 14
+    max_image_size: 448
+    min_image_size: 224
+
+  is_mandatory: false
+  weight: 1
+
+# mv camera pose
+vlm_sft_image:
+  dataset_names:
+    - scannetv2_camera_pose_estimate_Spec
+    - hypersim_camera_pose_estimate_Spec
+    - tartanair_camera_pose_estimate_Spec
+    - IRS_camera_pose_estimate_Spec
+    - scannetpp_camera_pose_estimate_Spec
+    - objaversev1_camera_pose_estimate_Spec
+    - co3dv2_camera_pose_estimate_Spec
+    - scenenet_camera_pose_estimate_Spec
+    - OmniObject3D_camera_pose_estimate_Spec
+    - MvsSynth_camera_pose_estimate_Spec
+    - Megasynth_camera_pose_estimate_Spec
+    - Demon_camera_pose_estimate_Spec
+    - Dl3dv_camera_pose_estimate_Spec
+    - Wildrgbd_camera_pose_estimate_Spec
+  num_used_data:
+    - 134692
+    - 17937
+    - 246978
+    - 10330
+    - 158390
+    - 126487
+    - 184658
+    - 83734
+    - 28820
+    - 326
+    - 33544
+    - 434
+    - 150854
+    - 170573
+  image_transform_args:
+    image_stride: 14
+    max_image_size: 560
+    min_image_size: 378
+    max_pixels: 2_007_040
+  frame_sampler_args:
+    max_num_frames: 12
+    min_num_frames: 8
+  shuffle_lines: true
+  shuffle_seed: 0
+  is_mandatory: false
+  weight: 1.56

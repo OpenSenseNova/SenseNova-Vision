@@ -1,0 +1,13 @@
+{
+  "task_name": "Pan Seg",
+  "input": "image.jpg",
+  "output": "gt.png",
+  "base_param": {
+    "caption_generate": {
+      "coco_json": "../panoptic_val2017.json",
+      "file_name": "image.jpg",
+      "image_id": "pan_val_demo"
+    }
+  },
+  "prompt": "Please perform panoptic segmentation for all visible objects and stuff regions in the image."
+}

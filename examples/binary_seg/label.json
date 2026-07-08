@@ -1,0 +1,6 @@
+{
+  "task_name": "Binary Seg",
+  "input": "image.png",
+  "output": "gt.png",
+  "prompt": "Could you return the binary segmentation masks for the specified categories: <p>person furthest to the right</p>?"
+}

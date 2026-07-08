@@ -1,0 +1,7 @@
+{
+  "task_name": "Bbox Detection",
+  "input": "image.jpg",
+  "output": "gt.png",
+  "base_param": {},
+  "prompt": "Detect all instances of <p>bird</p>, <p>boat</p>, <p>person</p>, <p>cell phone</p>, <p>backpack</p>, <p>handbag</p> in the image. Output the results as a structured text list with each detection including category and bounding box coordinates in <bbox> format."
+}

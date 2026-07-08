@@ -1,0 +1,817 @@
+import os
+import textwrap
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Optional
+
+import numpy as np
+from PIL import Image, ImageDraw, ImageFont
+
+from .colormap import build_palette, color_for_label, color_for_segment
+from .mask import decode_rle, mask_boundary, rgb2id, thicken_mask
+from .parsing_output import (
+    gcg_prediction_from_raw_output,
+    normalize_categories,
+    normalize_semantic_categories,
+    panoptic_prediction_from_raw_output,
+    parse_detection_output,
+    parse_visual_prompt,
+)
+
+# Shared drawing
+
+
+@dataclass
+class VisualizationConfig:
+    alpha: float = 0.55
+    min_label_area: int = 80
+    max_labels: int = 120
+    font_size: int = 0
+    draw_width: int = 0
+    point_radius: int = 0
+    keypoint_radius: int = 0
+    max_label_chars: int = 96
+    label_box_width_ratio: float = 1.25
+    prefer_unwrapped_labels: bool = False
+
+
+def ensure_config(config: Optional[VisualizationConfig] = None, **kwargs):
+    if config is None:
+        config = VisualizationConfig()
+    for key, value in kwargs.items():
+        if hasattr(config, key) and value is not None:
+            setattr(config, key, value)
+    return config
+
+
+def load_font(size: int = 14):
+    size = max(8, int(size))
+    candidates = [
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "/usr/share/fonts/truetype/liberation2/LiberationSans-Regular.ttf",
+        "/System/Library/Fonts/Supplemental/Arial.ttf",
+    ]
+    for path in candidates:
+        if os.path.exists(path):
+            return ImageFont.truetype(path, size=size)
+    return ImageFont.load_default()
+
+
+def xsam_default_font_size(width: int, height: int) -> int:
+    return max(9, int(round(min(width, height) / 55)))
+
+
+def xsam_label_font_size(width: int, height: int, bbox=None) -> int:
+    if bbox is None:
+        return xsam_default_font_size(width, height)
+    x0, y0, x1, y1 = bbox
+    span = max(1, min(abs(x1 - x0), abs(y1 - y0)))
+    return max(8, min(xsam_default_font_size(width, height), int(round(span / 5))))
+
+
+def wrap_label_text(text: Any, font, max_width: int, max_lines: int = 3) -> str:
+    text = " ".join(str(text).split())
+    if not text:
+        return ""
+    if font.getbbox(text)[2] - font.getbbox(text)[0] <= max_width:
+        return text
+    wrapped = []
+    for line in textwrap.wrap(text, width=max(8, max_width // max(1, font.size // 2))):
+        wrapped.append(line)
+        if len(wrapped) >= max_lines:
+            break
+    return "\n".join(wrapped)
+
+
+def draw_label(
+    draw: ImageDraw.ImageDraw,
+    xy,
+    text: Any,
+    color,
+    font,
+    max_label_chars: int = 96,
+    max_width: Optional[int] = None,
+    anchor: str = "top_left",
+    prefer_unwrapped: bool = False,
+):
+    text = " ".join(str(text).split())
+    if not text:
+        return
+    if max_label_chars and len(text) > max_label_chars:
+        text = text[: max(0, max_label_chars - 1)].rstrip() + "."
+
+    if max_width is not None and not prefer_unwrapped:
+        text = wrap_label_text(text, font, max_width=max_width, max_lines=4)
+
+    bbox = draw.multiline_textbbox((0, 0), text, font=font, spacing=2)
+    text_w = bbox[2] - bbox[0]
+    text_h = bbox[3] - bbox[1]
+    pad = max(3, int(round(getattr(font, "size", 12) * 0.25)))
+    x, y = xy
+    if anchor == "bottom_left":
+        y = y - text_h - 2 * pad
+    x = max(0, int(round(x)))
+    y = max(0, int(round(y)))
+    box = (x, y, x + text_w + 2 * pad, y + text_h + 2 * pad)
+
+    label_color = tuple(int(c) for c in color)
+    if sum(label_color) > 650:
+        label_color = (72, 80, 92)
+    draw.rounded_rectangle(
+        box,
+        radius=max(3, pad),
+        fill=label_color + (220,),
+        outline=(255, 255, 255, 210),
+        width=1,
+    )
+    draw.multiline_text(
+        (x + pad, y + pad),
+        text,
+        font=font,
+        fill=(255, 255, 255, 255),
+        stroke_width=1,
+        stroke_fill=(0, 0, 0, 255),
+        spacing=2,
+    )
+
+
+# Panel composition
+
+
+def concat_horizontally(*images):
+    widths, heights = zip(*(i.size for i in images))
+    total_width = sum(widths)
+    max_height = max(heights)
+
+    out = Image.new("RGB", (total_width, max_height))
+    x_offset = 0
+    for image in images:
+        out.paste(image, (x_offset, 0))
+        x_offset += image.size[0]
+    return out
+
+
+def add_header(
+    img: Image.Image, tag: str, tag_height: Optional[int] = None
+) -> Image.Image:
+    img = img.convert("RGB")
+    tag_height = tag_height or max(28, int(round(img.height * 0.055)))
+    out = Image.new("RGB", (img.width, img.height + tag_height), (255, 255, 255))
+    out.paste(img, (0, tag_height))
+    draw = ImageDraw.Draw(out)
+    draw.rectangle((0, 0, img.width, tag_height), fill=(18, 22, 28))
+    font = load_font(max(10, int(tag_height * 0.42)))
+    bbox = draw.textbbox((0, 0), tag, font=font)
+    draw.text(
+        (
+            (img.width - (bbox[2] - bbox[0])) // 2,
+            (tag_height - (bbox[3] - bbox[1])) // 2,
+        ),
+        tag,
+        font=font,
+        fill=(255, 255, 255),
+    )
+    return out
+
+
+def visualize_concat_col(
+    source: Image.Image,
+    pred: Image.Image,
+    concat_col: int = 1,
+    gt: Optional[Image.Image] = None,
+    prompt: Optional[Image.Image] = None,
+    source_label: str = "Image",
+    gt_label: str = "GT",
+    pred_label: str = "Prediction",
+    prompt_label: str = "Prompt",
+) -> Image.Image:
+    """Compose final panels. Case-level visualize_* functions only draw pred."""
+    if concat_col <= 1:
+        return pred
+    first = prompt if prompt is not None else source
+    first_label = prompt_label if prompt is not None else source_label
+    panels = [add_header(first, first_label)]
+    if concat_col >= 3 and gt is not None:
+        panels.append(add_header(gt, gt_label))
+    panels.append(add_header(pred, pred_label))
+    return concat_horizontally(*panels)
+
+
+# Segmentation
+
+
+def label_position(mask: np.ndarray):
+    ys, xs = np.nonzero(mask)
+    if len(xs) == 0:
+        return None
+    x0, x1 = int(xs.min()), int(xs.max())
+    y0, y1 = int(ys.min()), int(ys.max())
+    return int(np.median(xs)), int(np.median(ys)), (x0, y0, x1, y1)
+
+
+def overlay_segments(
+    image: Image.Image,
+    segments: list[dict],
+    alpha: float = 0.55,
+    min_label_area: int = 80,
+    max_labels: int = 120,
+) -> Image.Image:
+    overlay = np.asarray(image.convert("RGB"), dtype=np.uint8).copy()
+    draw_items = []
+
+    for seg in sorted(segments, key=lambda x: x.get("area", 0), reverse=True):
+        mask = np.asarray(seg["mask"]).astype(bool)
+        if mask.shape[:2] != overlay.shape[:2]:
+            mask_img = Image.fromarray(mask.astype(np.uint8) * 255, mode="L")
+            mask_img = mask_img.resize(
+                (overlay.shape[1], overlay.shape[0]), Image.NEAREST
+            )
+            mask = np.asarray(mask_img) > 0
+        color = np.asarray(seg["color"], dtype=np.float32)
+        overlay[mask] = np.clip(
+            overlay[mask].astype(np.float32) * (1.0 - alpha) + color * alpha,
+            0,
+            255,
+        ).astype(np.uint8)
+        edge = mask_boundary(mask)
+        overlay[edge] = np.clip(
+            color * 0.25 + np.array([255, 255, 255], dtype=np.float32) * 0.75,
+            0,
+            255,
+        ).astype(np.uint8)
+        area = int(seg.get("area", int(mask.sum())))
+        if area >= min_label_area:
+            pos = label_position(mask)
+            if pos is not None:
+                x, y, bbox = pos
+                draw_items.append(
+                    (
+                        area,
+                        (x, y),
+                        bbox,
+                        seg.get("label", ""),
+                        tuple(int(c) for c in seg["color"]),
+                    )
+                )
+
+    out = Image.fromarray(overlay, mode="RGB").convert("RGBA")
+    draw = ImageDraw.Draw(out, "RGBA")
+    font_cache = {}
+    for _, pos, bbox, label, color in sorted(
+        draw_items, key=lambda x: x[0], reverse=True
+    )[:max_labels]:
+        font_size = xsam_label_font_size(out.width, out.height, bbox)
+        font_cache.setdefault(font_size, load_font(font_size))
+        draw_label(
+            draw,
+            pos,
+            label,
+            color,
+            font_cache[font_size],
+            max_label_chars=96,
+            anchor="top_left",
+        )
+    return out.convert("RGB")
+
+
+def overlay_rgb_mask(
+    image: Image.Image, rgb_mask: Image.Image, alpha: float = 0.55
+) -> Image.Image:
+    image = image.convert("RGB")
+    if rgb_mask.size != image.size:
+        rgb_mask = rgb_mask.resize(image.size, resample=Image.NEAREST)
+    base = np.asarray(image, dtype=np.float32)
+    colors = np.asarray(rgb_mask.convert("RGB"), dtype=np.float32)
+    mask = np.any(colors > 0, axis=2)
+    out = base.copy()
+    out[mask] = out[mask] * (1.0 - alpha) + colors[mask] * alpha
+    return Image.fromarray(np.clip(out, 0, 255).astype(np.uint8), mode="RGB")
+
+
+def draw_visual_prompt(
+    image: Image.Image,
+    visual_prompt,
+    prompt_style: str = "fill",
+    color=(255, 0, 0),
+) -> Image.Image:
+    """Draw an interactive segmentation prompt on the source image."""
+    if visual_prompt is None:
+        return image.copy()
+    if isinstance(visual_prompt, (str, Path)):
+        visual_prompt = Image.open(visual_prompt)
+    out = image.convert("RGB")
+    prompt = visual_prompt.convert("L")
+    if prompt.size != out.size:
+        prompt = prompt.resize(out.size, resample=Image.NEAREST)
+    mask = np.asarray(prompt) > 127
+    if prompt_style == "boundary":
+        mask = thicken_mask(mask_boundary(mask), radius=1)
+    arr = np.asarray(out, dtype=np.uint8).copy()
+    arr[mask] = np.asarray(color, dtype=np.uint8)
+    return Image.fromarray(arr, mode="RGB")
+
+
+def _category_is_thing(category: dict) -> bool:
+    for key in ("isthing", "is_thing", "thing"):
+        if key in category:
+            return bool(category[key])
+    category_type = str(category.get("type", "")).lower()
+    if category_type in {"stuff", "semantic"}:
+        return False
+    return True
+
+
+def _category_color(category: dict, palette, fallback_id: int):
+    color = category.get("color") if isinstance(category, dict) else None
+    if isinstance(color, (list, tuple)) and len(color) >= 3:
+        return tuple(int(c) for c in color[:3])
+    return palette[int(fallback_id) % len(palette)]
+
+
+def visualize_gcg_prediction(
+    image: Image.Image,
+    prediction: dict,
+    palette=None,
+    config: Optional[VisualizationConfig] = None,
+) -> Image.Image:
+    """Visualize a structured GCG prediction."""
+    config = ensure_config(config)
+    palette = palette or build_palette()
+    phrases = prediction.get("gcg_phrases", [])
+    colors = prediction.get("colors", [])
+    segments = []
+    for idx, segmentation in enumerate(prediction.get("segmentation", [])):
+        mask = decode_rle(segmentation)
+        if mask.shape[:2] != (image.height, image.width):
+            mask_img = Image.fromarray(mask.astype(np.uint8) * 255, mode="L")
+            mask_img = mask_img.resize(image.size, resample=Image.NEAREST)
+            mask = np.asarray(mask_img) > 0
+        area = int(mask.sum())
+        if area == 0:
+            continue
+        label = phrases[idx] if idx < len(phrases) else f"mask-{idx}"
+        color = (
+            tuple(int(c) for c in colors[idx][:3])
+            if idx < len(colors)
+            else color_for_segment(
+                palette, idx, idx, f"{prediction.get('image_id')}-{idx}"
+            )
+        )
+        segments.append({"mask": mask, "area": area, "label": label, "color": color})
+    return overlay_segments(
+        image, segments, config.alpha, config.min_label_area, config.max_labels
+    )
+
+
+def visualize_gcg_segmentation(
+    image: Image.Image,
+    raw_mask: Image.Image,
+    caption: str,
+    palette=None,
+    config: Optional[VisualizationConfig] = None,
+) -> Image.Image:
+    """Visualize raw GCG output: original image + raw RGB mask + raw caption."""
+    prediction = gcg_prediction_from_raw_output(raw_mask, image, caption)
+    return visualize_gcg_prediction(image, prediction, palette=palette, config=config)
+
+
+def visualize_panoptic_prediction(
+    image: Image.Image,
+    prediction: dict,
+    categories=None,
+    palette=None,
+    config: Optional[VisualizationConfig] = None,
+) -> Image.Image:
+    config = ensure_config(config)
+    palette = palette or build_palette()
+    id_source = prediction.get("id_map")
+    if id_source is None:
+        id_source = prediction.get("panoptic_map")
+    if id_source is None:
+        id_source = prediction.get("png")
+    if id_source is None:
+        raise ValueError(
+            "Panoptic prediction requires `id_map`, `panoptic_map`, or `png`."
+        )
+    if isinstance(id_source, (str, Path)):
+        id_source = Image.open(id_source)
+    id_map = rgb2id(id_source)
+    ann = prediction.get("annotation", prediction)
+    category_map = normalize_categories(categories or prediction.get("categories"))
+    phrases = ann.get("gcg_phrases", [])
+    category_counts = {}
+    segments = []
+    for idx, segment_info in enumerate(ann.get("segments_info", [])):
+        segment_id = int(segment_info["id"])
+        mask = id_map == segment_id
+        area = int(mask.sum())
+        if area == 0:
+            continue
+        category_id = int(segment_info.get("category_id", -1))
+        category = category_map.get(
+            category_id,
+            {"id": category_id, "name": str(category_id), "isthing": 1},
+        )
+        is_thing = _category_is_thing(category)
+        if idx < len(phrases):
+            label = phrases[idx]
+        elif is_thing:
+            label = f"{category['name']}-{category_counts.get(category_id, 0)}"
+        else:
+            label = category["name"]
+        category_counts[category_id] = category_counts.get(category_id, 0) + 1
+        base_color = _category_color(category, palette, category_id)
+        color = (
+            color_for_segment([base_color], 0, idx, segment_id)
+            if is_thing
+            else base_color
+        )
+        segments.append({"mask": mask, "area": area, "label": label, "color": color})
+    return overlay_segments(
+        image, segments, config.alpha, config.min_label_area, config.max_labels
+    )
+
+
+def visualize_panoptic_segmentation(
+    image: Image.Image,
+    raw_mask: Image.Image,
+    caption: str,
+    categories=None,
+    question: str = "",
+    palette=None,
+    config: Optional[VisualizationConfig] = None,
+    strict_categories: bool = False,
+) -> Image.Image:
+    prediction = panoptic_prediction_from_raw_output(
+        image,
+        raw_mask,
+        caption,
+        categories,
+        question=question,
+        strict_categories=strict_categories,
+    )
+    return visualize_panoptic_prediction(
+        image,
+        prediction,
+        categories=prediction["categories"],
+        palette=palette,
+        config=config,
+    )
+
+
+def visualize_semantic_segmentation(
+    image: Image.Image,
+    semantic_mask,
+    categories,
+    palette=None,
+    ignore_ids=(255,),
+    config: Optional[VisualizationConfig] = None,
+) -> Image.Image:
+    config = ensure_config(config)
+    palette = palette or build_palette()
+    if isinstance(semantic_mask, (str, Path)):
+        semantic_mask = Image.open(semantic_mask)
+    label_mask = np.asarray(semantic_mask)
+    if label_mask.ndim == 3:
+        label_mask = label_mask[:, :, 0]
+    label_mask = label_mask.astype(np.int32)
+    category_map = normalize_semantic_categories(categories)
+    segments = []
+    for contiguous_id in sorted(int(value) for value in np.unique(label_mask)):
+        if contiguous_id in ignore_ids:
+            continue
+        category = category_map.get(contiguous_id) or {
+            "id": contiguous_id,
+            "name": str(contiguous_id),
+        }
+        mask = label_mask == contiguous_id
+        area = int(mask.sum())
+        if area == 0:
+            continue
+        category_id = int(category.get("id", contiguous_id))
+        segments.append(
+            {
+                "mask": mask,
+                "area": area,
+                "label": category.get("name", str(category_id)),
+                "color": _category_color(category, palette, category_id),
+            }
+        )
+    return overlay_segments(
+        image, segments, config.alpha, config.min_label_area, config.max_labels
+    )
+
+
+def visualize_binary_segmentation(
+    image: Image.Image,
+    pred_mask,
+    label: str = "prediction",
+    palette=None,
+    color=None,
+    config: Optional[VisualizationConfig] = None,
+) -> Image.Image:
+    config = ensure_config(config)
+    palette = palette or build_palette()
+    if isinstance(pred_mask, dict) and "segments" in pred_mask:
+        segments = pred_mask["segments"]
+    else:
+        if isinstance(pred_mask, (str, Path)):
+            pred_mask = Image.open(pred_mask)
+        if (
+            isinstance(pred_mask, dict)
+            and "size" in pred_mask
+            and "counts" in pred_mask
+        ):
+            mask = decode_rle(pred_mask)
+        else:
+            mask_array = np.asarray(
+                pred_mask.convert("L")
+                if isinstance(pred_mask, Image.Image)
+                else pred_mask
+            )
+            mask = (
+                mask_array > 127
+                if mask_array.dtype == np.uint8
+                else mask_array.astype(bool)
+            )
+        area = int(mask.sum())
+        segments = (
+            [{"mask": mask, "area": area, "label": label, "color": color or palette[0]}]
+            if area
+            else []
+        )
+    return overlay_segments(
+        image, segments, config.alpha, config.min_label_area, config.max_labels
+    )
+
+
+# Detection
+
+
+PERSON_SKELETON_CONNECTIONS = [
+    ("nose", "left eye"),
+    ("nose", "right eye"),
+    ("left eye", "left ear"),
+    ("right eye", "right ear"),
+    ("left shoulder", "right shoulder"),
+    ("left shoulder", "left elbow"),
+    ("right shoulder", "right elbow"),
+    ("left elbow", "left wrist"),
+    ("right elbow", "right wrist"),
+    ("left shoulder", "left hip"),
+    ("right shoulder", "right hip"),
+    ("left hip", "right hip"),
+    ("left hip", "left knee"),
+    ("right hip", "right knee"),
+    ("left knee", "left ankle"),
+    ("right knee", "right ankle"),
+]
+
+HAND_SKELETON_CONNECTIONS = [
+    ("wrist", "thumb root"),
+    ("thumb root", "thumb's third knuckle"),
+    ("thumb's third knuckle", "thumb's second knuckle"),
+    ("thumb's second knuckle", "thumb's first knuckle"),
+    ("wrist", "forefinger's root"),
+    ("forefinger's root", "forefinger's third knuckle"),
+    ("forefinger's third knuckle", "forefinger's second knuckle"),
+    ("forefinger's second knuckle", "forefinger's first knuckle"),
+    ("wrist", "middle finger's root"),
+    ("middle finger's root", "middle finger's third knuckle"),
+    ("middle finger's third knuckle", "middle finger's second knuckle"),
+    ("middle finger's second knuckle", "middle finger's first knuckle"),
+    ("wrist", "ring finger's root"),
+    ("ring finger's root", "ring finger's third knuckle"),
+    ("ring finger's third knuckle", "ring finger's second knuckle"),
+    ("ring finger's second knuckle", "ring finger's first knuckle"),
+    ("wrist", "pinky finger's root"),
+    ("pinky finger's root", "pinky finger's third knuckle"),
+    ("pinky finger's third knuckle", "pinky finger's second knuckle"),
+    ("pinky finger's second knuckle", "pinky finger's first knuckle"),
+]
+
+ANIMAL_SKELETON_CONNECTIONS = [
+    ("left eye", "right eye"),
+    ("left eye", "nose"),
+    ("right eye", "nose"),
+    ("nose", "neck"),
+    ("neck", "left shoulder"),
+    ("neck", "right shoulder"),
+    ("neck", "root of tail"),
+    ("root of tail", "left hip"),
+    ("root of tail", "right hip"),
+    ("left shoulder", "left elbow"),
+    ("right shoulder", "right elbow"),
+    ("left elbow", "left front paw"),
+    ("right elbow", "right front paw"),
+    ("left hip", "left knee"),
+    ("right hip", "right knee"),
+    ("left knee", "left back paw"),
+    ("right knee", "right back paw"),
+]
+
+
+def detection_font_size(width: int, height: int, config: VisualizationConfig) -> int:
+    if config.font_size and config.font_size > 0:
+        return config.font_size
+    return max(9, int(round(min(width, height) / 48)))
+
+
+def draw_bbox(draw, bbox, color, width: int):
+    draw.rectangle(
+        [tuple(bbox[:2]), tuple(bbox[2:])], outline=tuple(color) + (235,), width=width
+    )
+
+
+def draw_point(draw, point, color, radius: int):
+    x, y = point
+    draw.ellipse(
+        (x - radius, y - radius, x + radius, y + radius),
+        fill=tuple(color) + (235,),
+        outline=(255, 255, 255, 230),
+        width=1,
+    )
+
+
+def draw_polygon(draw, polygon, color, width: int):
+    draw.line(
+        list(polygon) + [polygon[0]],
+        fill=tuple(color) + (235,),
+        width=width,
+        joint="curve",
+    )
+
+
+def primitive_area(primitive):
+    kind = primitive.get("kind")
+    if kind == "bbox":
+        x0, y0, x1, y1 = primitive["bbox"]
+        return max(0.0, x1 - x0) * max(0.0, y1 - y0)
+    if kind == "point":
+        return 1
+    if kind == "polygon":
+        xs = [p[0] for p in primitive["polygon"]]
+        ys = [p[1] for p in primitive["polygon"]]
+        return max(1.0, (max(xs) - min(xs)) * (max(ys) - min(ys)))
+    if kind == "keypoint":
+        bbox = primitive.get("bbox")
+        if bbox:
+            x0, y0, x1, y1 = bbox
+            return max(0.0, x1 - x0) * max(0.0, y1 - y0)
+        return max(1, len(primitive.get("keypoints", {})))
+    return primitive.get("area", 0)
+
+
+def select_keypoint_connections(primitive):
+    context = " ".join(
+        str(primitive.get(k, "")).lower()
+        for k in ("keypoint_type", "keypoint_context", "label")
+    )
+    if "hand" in context:
+        return HAND_SKELETON_CONNECTIONS
+    if "animal" in context or "ap-10k" in context or "ap10k" in context:
+        return ANIMAL_SKELETON_CONNECTIONS
+    return PERSON_SKELETON_CONNECTIONS
+
+
+def draw_keypoint_skeleton(draw, primitive, width: int):
+    keypoints = {str(k).lower(): v for k, v in primitive.get("keypoints", {}).items()}
+    color = tuple(int(c) for c in primitive.get("color", (255, 0, 0)))
+    for a, b in select_keypoint_connections(primitive):
+        if a in keypoints and b in keypoints:
+            draw.line(
+                [tuple(keypoints[a]), tuple(keypoints[b])],
+                fill=color + (205,),
+                width=width,
+            )
+
+
+def overlay_primitives(
+    image: Image.Image,
+    primitives: list[dict],
+    config: Optional[VisualizationConfig] = None,
+) -> Image.Image:
+    config = ensure_config(config)
+    if not primitives:
+        return image.copy()
+
+    mask_segments = []
+    draw_primitives = []
+    for primitive in primitives:
+        if primitive.get("kind") == "mask":
+            mask_segments.append(
+                {
+                    "mask": primitive["mask"],
+                    "area": primitive.get(
+                        "area", int(np.asarray(primitive["mask"]).sum())
+                    ),
+                    "label": primitive.get("label", ""),
+                    "color": primitive.get("color", (255, 0, 0)),
+                }
+            )
+        else:
+            draw_primitives.append(primitive)
+
+    out = image.convert("RGB")
+    if mask_segments:
+        out = overlay_segments(
+            out, mask_segments, config.alpha, config.min_label_area, config.max_labels
+        )
+
+    out = out.convert("RGBA")
+    draw = ImageDraw.Draw(out, "RGBA")
+    font = load_font(detection_font_size(out.width, out.height, config))
+    line_width = (
+        config.draw_width
+        if config.draw_width and config.draw_width > 0
+        else max(2, int(round(min(out.size) / 360)))
+    )
+    point_radius = (
+        config.point_radius
+        if config.point_radius and config.point_radius > 0
+        else max(4, int(round(min(out.size) / 160)))
+    )
+
+    labeled = 0
+    for primitive in sorted(
+        draw_primitives,
+        key=lambda x: (1 if x.get("is_prompt") else 0, -primitive_area(x)),
+    ):
+        color = tuple(int(c) for c in primitive.get("color", (255, 0, 0)))
+        label_xy = None
+        if primitive["kind"] == "bbox":
+            bbox = primitive["bbox"]
+            draw_bbox(draw, bbox, color, line_width)
+            label_xy = (bbox[0], bbox[1])
+        elif primitive["kind"] == "point":
+            point = primitive["point"]
+            draw_point(draw, point, color, point_radius)
+            label_xy = (point[0] + point_radius + 3, point[1] + point_radius + 3)
+        elif primitive["kind"] == "polygon":
+            polygon = primitive["polygon"]
+            draw_polygon(draw, polygon, color, line_width)
+            label_xy = (min(p[0] for p in polygon), min(p[1] for p in polygon))
+        elif primitive["kind"] == "keypoint":
+            bbox = primitive.get("bbox")
+            if bbox:
+                draw_bbox(draw, bbox, color, line_width)
+                label_xy = (bbox[0], bbox[1])
+            keypoint_radius = (
+                config.keypoint_radius
+                if config.keypoint_radius > 0
+                else max(3, point_radius - 1)
+            )
+            draw_keypoint_skeleton(draw, primitive, max(2, keypoint_radius))
+            for point in primitive.get("keypoints", {}).values():
+                draw_point(draw, point, color, keypoint_radius)
+
+        if label_xy is not None and labeled < config.max_labels:
+            label_max_width = None
+            bbox = primitive.get("bbox")
+            if bbox:
+                label_max_width = max(
+                    80, int((bbox[2] - bbox[0]) * config.label_box_width_ratio)
+                )
+            draw_label(
+                draw,
+                label_xy,
+                primitive.get("label", ""),
+                color,
+                font,
+                config.max_label_chars,
+                label_max_width,
+                "top_left" if primitive["kind"] == "point" else "bottom_left",
+                config.prefer_unwrapped_labels,
+            )
+            labeled += 1
+    return out.convert("RGB")
+
+
+def visualize_detection(
+    image: Image.Image,
+    predictions,
+    task_name: Optional[str] = None,
+    prompt: Optional[str] = None,
+    palette=None,
+    config: Optional[VisualizationConfig] = None,
+    include_prompt: bool = True,
+) -> Image.Image:
+    config = ensure_config(config)
+    palette = palette or build_palette()
+    keypoint_context = task_name or ""
+    primitives = parse_detection_output(
+        predictions, image.size, keypoint_context=keypoint_context
+    )
+    if include_prompt:
+        primitives = parse_visual_prompt(prompt or "", image.size) + primitives
+    for primitive in primitives:
+        primitive["color"] = (
+            (255, 0, 0)
+            if primitive.get("is_prompt")
+            else color_for_label(
+                palette,
+                primitive.get("label", "object"),
+                primitive.get("color_index", 0),
+            )
+        )
+    return overlay_primitives(image, primitives, config)
