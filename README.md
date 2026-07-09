@@ -13,6 +13,7 @@
   <a href="https://huggingface.co/sensenova/SenseNova-Vision-7B-MoT"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20HuggingFace-Model-yellow" alt="HuggingFace Model"></a>
   <a href="https://huggingface.co/datasets/sensenova/SenseNova-Vision-Corpus-50M"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20HuggingFace-Dataset-yellow" alt="HuggingFace Dataset"></a>
   <a href="https://huggingface.co/spaces/sensenova/SenseNova-Vision"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20SenseNova--Vision-Demo-Green" alt="SenseNova-Vision Demo"></a>
+  <a href="https://modelscope.cn/models/SenseNova/SenseNova-Vision-7B-MoT" target="_blank"><img src="https://img.shields.io/badge/🤖%20ModelScope-Model-blue" alt="ModelScope Model"></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License"></a>
 
 <br>
