@@ -5,7 +5,6 @@ An awesome colormap for really neat visualizations.
 Copied from Detectron, and removed gray colors.
 """
 
-import csv
 import random
 from hashlib import md5
 
@@ -16,7 +15,6 @@ __all__ = [
     "color_for_label",
     "color_for_segment",
     "colormap",
-    "load_extra_palette",
     "random_color",
     "random_colors",
     "stable_index",
@@ -155,35 +153,12 @@ def random_colors(N, rgb=False, maximum=255):
     return ret
 
 
-def load_extra_palette(csv_path):
-    """Load optional RGB colors from a CSV file with R/G/B columns."""
-    colors = []
-    if not csv_path:
-        return colors
-
-    with open(csv_path, "r", newline="") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            lower = {str(k).strip().lower(): v for k, v in row.items()}
-            if not all(k in lower for k in ("r", "g", "b")):
-                continue
-            try:
-                colors.append(
-                    (
-                        int(float(lower["r"])),
-                        int(float(lower["g"])),
-                        int(float(lower["b"])),
-                    )
-                )
-            except (TypeError, ValueError):
-                continue
-    return colors
-
-
-def build_palette(extra_csv=None, rgb=True, maximum=255):
-    """Return a list of RGB tuples, optionally prepending colors from CSV."""
-    base = [tuple(int(x) for x in c) for c in colormap(rgb=rgb, maximum=maximum)]
-    return load_extra_palette(extra_csv) + base
+def build_palette(rgb=True, maximum=255):
+    """Return the stable built-in visualization palette."""
+    return [
+        tuple(int(x) for x in np.round(c).astype(np.uint8))
+        for c in colormap(rgb=rgb, maximum=maximum)
+    ]
 
 
 def stable_index(text, modulo):
@@ -195,7 +170,7 @@ def stable_jitter(color, seed, strength=42):
     """Apply deterministic per-instance jitter while keeping colors readable."""
     digest = md5(str(seed).encode("utf-8")).digest()
     jitter = np.array([digest[0], digest[1], digest[2]], dtype=np.float32)
-    jitter = (jitter / 255.0 - 0.5) * float(strength)
+    jitter = (jitter / 255.0 - 0.5) * 2.0 * float(strength)
     arr = np.asarray(color, dtype=np.float32) + jitter
     return tuple(int(x) for x in np.clip(arr, 0, 255))
 
@@ -203,8 +178,9 @@ def stable_jitter(color, seed, strength=42):
 def color_for_segment(palette, category_id, index=0, segment_id=None):
     if not palette:
         palette = build_palette()
-    base = palette[int(category_id) % len(palette)]
-    seed = segment_id if segment_id is not None else f"{category_id}-{index}"
+    key = category_id if category_id is not None else index
+    base = palette[int(key) % len(palette)]
+    seed = segment_id if segment_id is not None else index
     return stable_jitter(base, seed)
 
 

@@ -4,6 +4,24 @@ from pycocoevalcap.meteor.meteor import Meteor
 from pycocoevalcap.tokenizer.ptbtokenizer import PTBTokenizer
 
 
+MAX_PREDICTION_TOKENS = 2000
+
+
+def truncate_prediction_tokens(captions, max_tokens=MAX_PREDICTION_TOKENS):
+    """Limit tokenized prediction captions before metric computation."""
+    truncated = {}
+    truncated_count = 0
+    for image_id, image_captions in captions.items():
+        truncated[image_id] = []
+        for caption in image_captions:
+            tokens = caption.split()
+            if len(tokens) > max_tokens:
+                caption = " ".join(tokens[:max_tokens])
+                truncated_count += 1
+            truncated[image_id].append(caption)
+    return truncated, truncated_count
+
+
 class COCOEvalCap(_COCOEvalCap):
     def evaluate(self):
         imgIds = self.params["image_id"]
@@ -25,6 +43,12 @@ class COCOEvalCap(_COCOEvalCap):
         tokenizer = PTBTokenizer()
         gts = tokenizer.tokenize(gts)
         res = tokenizer.tokenize(res)
+        res, truncated_count = truncate_prediction_tokens(res)
+        if truncated_count:
+            print(
+                f"truncated {truncated_count} prediction caption(s) to "
+                f"{MAX_PREDICTION_TOKENS} tokens for caption metrics"
+            )
 
         # =================================================
         # Set up scorers

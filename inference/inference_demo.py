@@ -103,6 +103,7 @@ HUMAN_KEYPOINT_CATEGORIES = {"human", "person", "people", "pedestrian"}
 TaskPromptBuilder = Callable[[str], str]
 NO_QUERY_TASKS = {"depth", "normal", "gcg_seg", "ocr", "recon3d", "camera_pose"}
 DETECTION_VIS_TASKS = {"bbox_detection", "point_detection", "keypoint", "ocr"}
+DENSE_GEOMETRY_VIS_TASKS = {"depth", "normal"}
 
 
 @contextmanager
@@ -512,6 +513,8 @@ def make_visualization(
 ) -> Image.Image:
     source = input_image.convert("RGB")
     pred = make_prediction_panel(task, source, output_image, prompt, text_output)
+    if task in DENSE_GEOMETRY_VIS_TASKS and source.size != pred.size:
+        source = source.resize(pred.size, Image.Resampling.BICUBIC)
     body = visualize_concat_col(source, pred, concat_col=2)
     text_panel = make_text_panel(body.width, prompt, text_output)
 

@@ -1,6 +1,5 @@
 import argparse
 import base64
-import html
 import importlib
 import json
 import math
@@ -252,13 +251,13 @@ BASE_PARAM_CONTROL_KEYS = (
     "seed",
 )
 BASE_PARAM_CONTROL_DEFAULTS: Dict[str, Any] = {
-    "cfg_text_scale": 0.0,
-    "cfg_img_scale": 0.0,
+    "cfg_text_scale": 1.0,
+    "cfg_img_scale": 1.0,
     "cfg_interval_start": 0.0,
     "cfg_interval_end": 1.0,
-    "timestep_shift": 0.0,
+    "timestep_shift": 1.0,
     "num_timesteps": 50,
-    "cfg_renorm_min": 0.0,
+    "cfg_renorm_min": 1.0,
     "max_length_token": 8192,
     "seed": 42,
 }
@@ -1282,17 +1281,9 @@ def clear_raw_image_output() -> Any:
     return _raw_image_output_update([])
 
 
-def clear_error_toast() -> Tuple[Any, str]:
-    return gr.update(visible=False), ""
-
-
-def _error_toast_message(exc: Exception) -> str:
-    exc_type = html.escape(type(exc).__name__)
-    message = html.escape(str(exc) or "Unknown error.")
-    return (
-        f'<div class="error-toast-type">{exc_type}</div>'
-        f'<div class="error-toast-copy">{message}</div>'
-    )
+def _raise_gradio_error(exc: Exception) -> None:
+    message = str(exc) or "Unknown error."
+    raise gr.Error(f"{type(exc).__name__}: {message}") from exc
 
 
 def _model3d_output_update(path: str, *, visible_when_empty: bool = False) -> Any:
@@ -1487,7 +1478,7 @@ def _validate_run_inputs(
     )
 
 
-def validate_params_for_toast(
+def validate_params_for_error(
     task_action: str,
     cfg_text_scale: Any,
     cfg_img_scale: Any,
@@ -1498,7 +1489,7 @@ def validate_params_for_toast(
     cfg_renorm_min: Any,
     max_length_token: Any,
     seed: Any,
-) -> Tuple[Any, str]:
+) -> None:
     try:
         params_from_base_param_controls(
             task_action,
@@ -1512,9 +1503,10 @@ def validate_params_for_toast(
             max_length_token,
             seed,
         )
+    except gr.Error:
+        raise
     except Exception as exc:
-        return gr.update(visible=True), _error_toast_message(exc)
-    return gr.update(visible=False), ""
+        _raise_gradio_error(exc)
 
 
 def run_with_validation(
@@ -1532,8 +1524,7 @@ def run_with_validation(
     cfg_renorm_min: Any,
     max_length_token: Any,
     seed: Any,
-) -> Tuple[Optional[Image.Image], str, Any, Any, str, Any, str]:
-    start = time.time()
+) -> Tuple[Optional[Image.Image], str, Any, Any, str]:
     try:
         _validate_run_inputs(
             input_images,
@@ -1548,41 +1539,26 @@ def run_with_validation(
             max_length_token,
             seed,
         )
-        return (
-            *predict(
-                input_images,
-                task_action,
-                task,
-                mode,
-                query,
-                cfg_text_scale,
-                cfg_img_scale,
-                cfg_interval_start,
-                cfg_interval_end,
-                timestep_shift,
-                num_timesteps,
-                cfg_renorm_min,
-                max_length_token,
-                seed,
-            ),
-            gr.update(visible=False),
-            "",
+        return predict(
+            input_images,
+            task_action,
+            task,
+            mode,
+            query,
+            cfg_text_scale,
+            cfg_img_scale,
+            cfg_interval_start,
+            cfg_interval_end,
+            timestep_shift,
+            num_timesteps,
+            cfg_renorm_min,
+            max_length_token,
+            seed,
         )
+    except gr.Error:
+        raise
     except Exception as exc:
-        metadata = {
-            "error": type(exc).__name__,
-            "message": str(exc),
-            "elapsed_sec": round(time.time() - start, 3),
-        }
-        return (
-            gr.update(value=None, visible=True),
-            "",
-            _file_output_update([]),
-            _model3d_output_update(""),
-            _safe_json(metadata),
-            gr.update(visible=True),
-            _error_toast_message(exc),
-        )
+        _raise_gradio_error(exc)
 
 
 def update_task(task: str) -> Tuple[Any, ...]:
@@ -1821,7 +1797,29 @@ def load_demo_case_from_gallery(evt: gr.SelectData) -> Tuple[Any, ...]:
 
 def build_demo() -> gr.Blocks:
     css = """
-    :root {
+    :root,
+    body,
+    body.dark,
+    .dark,
+    .gradio-container,
+    .gradio-container.dark,
+    .dark .gradio-container {
+        color-scheme: light !important;
+        --body-background-fill: #f6f9fc !important;
+        --background-fill-primary: #ffffff !important;
+        --background-fill-secondary: #f8fafc !important;
+        --block-background-fill: #ffffff !important;
+        --block-border-color: #dbe3ef !important;
+        --block-label-background-fill: #dfe5ff !important;
+        --block-label-text-color: #6366f1 !important;
+        --body-text-color: #172033 !important;
+        --body-text-color-subdued: #667085 !important;
+        --input-background-fill: #ffffff !important;
+        --input-border-color: #d7deea !important;
+        --button-secondary-background-fill: #ffffff !important;
+        --button-secondary-text-color: #26324b !important;
+        --checkbox-background-color: #ffffff !important;
+        --checkbox-border-color: #e0e7ff !important;
         --ink: #eef4ff;
         --ink-strong: #ffffff;
         --muted: #9aa9c7;
@@ -2192,19 +2190,25 @@ def build_demo() -> gr.Blocks:
         cursor: pointer !important;
         border-radius: 10px !important;
     }
+    .append-image-upload::after {
+        content: none !important;
+    }
     .append-image-upload button {
         width: 44px !important;
         height: 44px !important;
         min-width: 44px !important;
         padding: 0 !important;
         border: 0 !important;
-        background: transparent !important;
+        background: #ffffff !important;
         color: var(--accent) !important;
-        font-size: 0 !important;
+        font-size: 26px !important;
+        line-height: 1 !important;
+        font-weight: 700 !important;
+        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.80) !important;
         cursor: pointer !important;
     }
     .append-image-upload button::after {
-        content: "+";
+        content: none !important;
         font-size: 30px;
         line-height: 1;
         font-weight: 400;
@@ -2229,9 +2233,9 @@ def build_demo() -> gr.Blocks:
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        color: transparent !important;
-        font-size: 0 !important;
-        line-height: 0 !important;
+        color: var(--accent) !important;
+        font-size: inherit !important;
+        line-height: 1 !important;
     }
     .append-image-upload input[type="file"] {
         cursor: pointer !important;
@@ -2245,7 +2249,7 @@ def build_demo() -> gr.Blocks:
     .append-image-upload [data-testid="file"]::after,
     .append-image-upload .upload-container::after,
     .append-image-upload [class*="drop"]::after {
-        content: "+";
+        content: none !important;
         color: var(--accent);
         font-size: 30px;
         line-height: 1;
@@ -2393,8 +2397,28 @@ def build_demo() -> gr.Blocks:
         background: rgba(148, 163, 184, 0.22) !important;
         pointer-events: none !important;
     }
+    .task-pills input[type="radio"] {
+        position: absolute !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
     .task-pills label span {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 8px !important;
         color: inherit !important;
+        min-width: 0 !important;
+    }
+    .task-pills label span::before {
+        content: "" !important;
+        width: 14px !important;
+        height: 14px !important;
+        min-width: 14px !important;
+        border-radius: 999px !important;
+        border: 1px solid #cfe0ff !important;
+        background: #ffffff !important;
+        box-shadow: inset 0 0 0 3px #ffffff !important;
     }
     .task-pills label:has(input:checked),
     .task-pills label.selected {
@@ -2407,6 +2431,12 @@ def build_demo() -> gr.Blocks:
     .task-pills label.selected span {
         color: #ffffff !important;
         font-weight: 850 !important;
+    }
+    .task-pills label:has(input:checked) span::before,
+    .task-pills label.selected span::before {
+        border-color: rgba(255, 255, 255, 0.72) !important;
+        background: radial-gradient(circle at center, #ffffff 0 3px, rgba(255, 255, 255, 0.18) 3.5px) !important;
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12) !important;
     }
     .task-pills input[type="radio"]:checked + span,
     .task-pills input[type="radio"]:checked ~ span {
@@ -2606,11 +2636,47 @@ def build_demo() -> gr.Blocks:
     }
     .raw-output-download {
         min-height: 0 !important;
+        color-scheme: light !important;
+        --body-background-fill: #ffffff !important;
+        --background-fill-primary: #ffffff !important;
+        --background-fill-secondary: #f8fafc !important;
+        --block-background-fill: #ffffff !important;
+        --input-background-fill: #ffffff !important;
+        --body-text-color: #172033 !important;
+        --button-secondary-background-fill: #ffffff !important;
+        --button-secondary-text-color: #5b5ff4 !important;
     }
     .raw-output-download [data-testid="file"],
     .raw-output-download .file-preview,
     .raw-output-download .wrap {
         max-height: 96px !important;
+    }
+    .raw-output-download [data-testid="file"],
+    .raw-output-download .file-preview,
+    .raw-output-download .wrap,
+    .raw-output-download ul,
+    .raw-output-download li,
+    .raw-output-download a {
+        background: #ffffff !important;
+        color: #172033 !important;
+        border-color: transparent !important;
+    }
+    .raw-output-download [data-testid="file"] *,
+    .raw-output-download .file-preview *,
+    .raw-output-download li *,
+    .raw-output-download a * {
+        background: transparent !important;
+        background-color: transparent !important;
+        color: #172033 !important;
+    }
+    .raw-output-download a,
+    .raw-output-download button,
+    .raw-output-download [role="button"] {
+        color: #5b5ff4 !important;
+    }
+    .raw-output-download svg {
+        color: #5b5ff4 !important;
+        stroke: #5b5ff4 !important;
     }
     .raw-output-download [class*="upload"],
     .raw-output-download [class*="drop"] {
@@ -2788,12 +2854,6 @@ def build_demo() -> gr.Blocks:
     )
 
     with gr.Blocks(title=APP_TITLE, css=css, theme=gr.themes.Soft()) as demo:
-        with gr.Group(visible=False, elem_classes=["error-toast"]) as error_toast:
-            with gr.Row(elem_classes=["error-toast-header"]):
-                gr.HTML('<div class="error-toast-title">Run failed</div>')
-                error_toast_close = gr.Button("×", elem_classes=["error-toast-close"])
-            error_toast_message = gr.HTML("", elem_classes=["error-toast-message"])
-
         with gr.Column(elem_classes=["main-shell"]):
             gr.HTML(f"""
             <div class="app-header">
@@ -2829,7 +2889,7 @@ def build_demo() -> gr.Blocks:
                         input_image_paths = gr.Gallery(
                             value=initial_images,
                             type="filepath",
-                            file_types=["image"],
+                            file_types=["image", ".webp"],
                             visible=False,
                         )
                         input_slot_outputs = []
@@ -2865,7 +2925,7 @@ def build_demo() -> gr.Blocks:
                                 append_images = upload_component(
                                     label="+",
                                     file_count="multiple",
-                                    file_types=["image"],
+                                    file_types=["image", ".webp"],
                                     type="filepath",
                                     elem_classes=["append-image-upload"],
                                 )
@@ -2874,7 +2934,7 @@ def build_demo() -> gr.Blocks:
                                     label="+",
                                     show_label=False,
                                     file_count="multiple",
-                                    file_types=["image"],
+                                    file_types=["image", ".webp"],
                                     type="filepath",
                                     elem_classes=["append-image-upload"],
                                 )
@@ -3080,9 +3140,8 @@ def build_demo() -> gr.Blocks:
             )
             for param_control in base_param_outputs:
                 param_control.change(
-                    fn=validate_params_for_toast,
+                    fn=validate_params_for_error,
                     inputs=[task_action, *base_param_outputs],
-                    outputs=[error_toast, error_toast_message],
                 )
             for delete_button, delete_index in delete_buttons:
                 delete_button.click(
@@ -3106,19 +3165,13 @@ def build_demo() -> gr.Blocks:
                     result_files,
                     result_model3d,
                     metadata,
-                    error_toast,
-                    error_toast_message,
                 ],
+                api_name="predict",
             )
-            run_event.then(
+            run_event.success(
                 fn=update_raw_output_display,
                 inputs=metadata,
                 outputs=[result_files, result_raw_images],
-            )
-            error_toast_close.click(
-                fn=clear_error_toast,
-                inputs=[],
-                outputs=[error_toast, error_toast_message],
             )
     return demo
 

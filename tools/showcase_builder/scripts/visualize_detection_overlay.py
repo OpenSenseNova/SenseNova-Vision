@@ -149,14 +149,18 @@ def parse_args():
     parser.add_argument("--concat_col", type=int, default=1, choices=[1, 2, 3])
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument("--skip_missing", action="store_true")
-    parser.add_argument("--color_csv", default=None)
     parser.add_argument("--alpha", type=float, default=0.55)
     parser.add_argument("--font_size", type=int, default=0)
     parser.add_argument("--draw_width", type=int, default=0)
     parser.add_argument("--point_radius", type=int, default=0)
     parser.add_argument("--keypoint_radius", type=int, default=0)
     parser.add_argument("--max_labels", type=int, default=120)
-    parser.add_argument("--max_label_chars", type=int, default=96)
+    parser.add_argument(
+        "--max_label_chars",
+        type=int,
+        default=96,
+        help="Maximum label characters before truncation. 0 disables truncation.",
+    )
     parser.add_argument("--prefer_unwrapped_labels", action="store_true")
     return parser.parse_args()
 
@@ -167,7 +171,7 @@ def main():
     jsonls = prediction_jsonls_from_roots(roots, data_path=args.data_path)
     if not jsonls:
         raise FileNotFoundError(f"No JSONL files found under: {roots}")
-    palette = build_palette(args.color_csv)
+    palette = build_palette()
     multi_file = len(jsonls) > 1
     summaries = [visualize_jsonl(path, args, palette, multi_file=multi_file) for path in jsonls]
     for summary in summaries:

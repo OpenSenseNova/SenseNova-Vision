@@ -809,17 +809,21 @@ def parse_args():
     parser.add_argument("--concat_col", type=int, default=1, choices=[1, 2, 3])
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument("--skip_missing", action="store_true")
-    parser.add_argument("--color_csv", default=None)
     parser.add_argument("--alpha", type=float, default=0.55)
     parser.add_argument("--min_label_area", type=int, default=80)
     parser.add_argument("--max_labels", type=int, default=120)
-    parser.add_argument("--font_size", type=int, default=0)
+    parser.add_argument(
+        "--font_size",
+        type=int,
+        default=0,
+        help="Override dynamic label sizing. 0 uses image- and mask-aware sizing.",
+    )
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
-    palette = build_palette(args.color_csv)
+    palette = build_palette()
     roots = parse_root_args(args.prediction_root)
     summaries = []
     for root in roots:

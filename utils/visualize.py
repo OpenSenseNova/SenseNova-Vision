@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
 
+import cv2
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
@@ -31,7 +32,6 @@ class VisualizationConfig:
     point_radius: int = 0
     keypoint_radius: int = 0
     max_label_chars: int = 96
-    label_box_width_ratio: float = 1.25
     prefer_unwrapped_labels: bool = False
 
 
@@ -44,13 +44,19 @@ def ensure_config(config: Optional[VisualizationConfig] = None, **kwargs):
     return config
 
 
-def load_font(size: int = 14):
+def load_font(size: int = 14, bold: bool = False):
     size = max(8, int(size))
-    candidates = [
+    regular_candidates = [
         "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
         "/usr/share/fonts/truetype/liberation2/LiberationSans-Regular.ttf",
         "/System/Library/Fonts/Supplemental/Arial.ttf",
     ]
+    bold_candidates = [
+        "/usr/share/fonts/truetype/liberation2/LiberationSans-Bold.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+        "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+    ]
+    candidates = bold_candidates + regular_candidates if bold else regular_candidates
     for path in candidates:
         if os.path.exists(path):
             return ImageFont.truetype(path, size=size)
@@ -62,25 +68,86 @@ def xsam_default_font_size(width: int, height: int) -> int:
 
 
 def xsam_label_font_size(width: int, height: int, bbox=None) -> int:
+    default_size = xsam_default_font_size(width, height)
     if bbox is None:
-        return xsam_default_font_size(width, height)
-    x0, y0, x1, y1 = bbox
-    span = max(1, min(abs(x1 - x0), abs(y1 - y0)))
-    return max(8, min(xsam_default_font_size(width, height), int(round(span / 5))))
+        return default_size
+    y0, y1 = bbox[1], bbox[3]
+    height_ratio = max(1, y1 - y0) / max(1.0, np.sqrt(width * height))
+    scale = np.clip((height_ratio - 0.02) / 0.08 + 1, 1.2, 2.0) * 0.5
+    return max(8, int(round(scale * default_size)))
 
 
 def wrap_label_text(text: Any, font, max_width: int, max_lines: int = 3) -> str:
-    text = " ".join(str(text).split())
+    words = str(text or "").split()
+    if not words:
+        return ""
+    probe = ImageDraw.Draw(Image.new("RGB", (1, 1)))
+    normalized = " ".join(words)
+    if probe.textlength(normalized, font=font) <= max_width:
+        return normalized
+
+    lines = []
+    current = words[0]
+    consumed = 1
+    for word in words[1:]:
+        trial = f"{current} {word}"
+        if probe.textlength(trial, font=font) <= max_width:
+            current = trial
+            consumed += 1
+            continue
+        lines.append(current)
+        current = word
+        consumed += 1
+        if len(lines) >= max_lines - 1:
+            break
+    lines.append(current)
+    if len(lines) == max_lines and consumed < len(words):
+        lines[-1] = textwrap.shorten(
+            lines[-1],
+            width=max(8, len(lines[-1]) - 1),
+            placeholder="...",
+        )
+    return "\n".join(lines[:max_lines])
+
+
+def wrap_label_text_no_ellipsis(
+    text: Any, font, max_width: int, max_lines: int = 4
+) -> str:
+    text = " ".join(str(text or "").split())
     if not text:
         return ""
-    if font.getbbox(text)[2] - font.getbbox(text)[0] <= max_width:
-        return text
-    wrapped = []
-    for line in textwrap.wrap(text, width=max(8, max_width // max(1, font.size // 2))):
-        wrapped.append(line)
-        if len(wrapped) >= max_lines:
-            break
-    return "\n".join(wrapped)
+    probe = ImageDraw.Draw(Image.new("RGB", (1, 1)))
+    max_width = max(40, int(max_width))
+
+    words = []
+    for word in text.split():
+        if probe.textlength(word, font=font) <= max_width:
+            words.append(word)
+            continue
+        current = ""
+        for char in word:
+            trial = current + char
+            if current and probe.textlength(trial, font=font) > max_width:
+                words.append(current)
+                current = char
+            else:
+                current = trial
+        if current:
+            words.append(current)
+
+    lines = []
+    current = words[0]
+    for word in words[1:]:
+        trial = f"{current} {word}" if current else word
+        if probe.textlength(trial, font=font) <= max_width:
+            current = trial
+        else:
+            lines.append(current)
+            current = word
+    lines.append(current)
+    if len(lines) <= max_lines:
+        return "\n".join(lines)
+    return "\n".join(lines[: max_lines - 1] + [" ".join(lines[max_lines - 1 :])])
 
 
 def draw_label(
@@ -94,38 +161,43 @@ def draw_label(
     anchor: str = "top_left",
     prefer_unwrapped: bool = False,
 ):
-    text = " ".join(str(text).split())
+    """Draw a detection-family label using the reference overlay style."""
+    text = " ".join(str(text or "").split())
     if not text:
         return
-    if max_label_chars and len(text) > max_label_chars:
-        text = text[: max(0, max_label_chars - 1)].rstrip() + "."
+    if max_label_chars > 0 and len(text) > max_label_chars:
+        if max_label_chars <= 3:
+            text = text[:max_label_chars]
+        else:
+            text = text[: max_label_chars - 3].rstrip() + "..."
+    wrap_width = max_width or max(80, int(draw.im.size[0] * 0.42))
+    if prefer_unwrapped:
+        wrap_width = max(wrap_width, draw.im.size[0] - 8)
+    text = wrap_label_text_no_ellipsis(text, font, wrap_width, max_lines=4)
 
-    if max_width is not None and not prefer_unwrapped:
-        text = wrap_label_text(text, font, max_width=max_width, max_lines=4)
-
-    bbox = draw.multiline_textbbox((0, 0), text, font=font, spacing=2)
+    bbox = draw.multiline_textbbox(
+        (0, 0), text, font=font, stroke_width=1, spacing=2
+    )
     text_w = bbox[2] - bbox[0]
     text_h = bbox[3] - bbox[1]
-    pad = max(3, int(round(getattr(font, "size", 12) * 0.25)))
-    x, y = xy
+    pad = max(2, int(getattr(font, "size", 12) * 0.18))
     if anchor == "bottom_left":
-        y = y - text_h - 2 * pad
-    x = max(0, int(round(x)))
-    y = max(0, int(round(y)))
-    box = (x, y, x + text_w + 2 * pad, y + text_h + 2 * pad)
-
-    label_color = tuple(int(c) for c in color)
-    if sum(label_color) > 650:
-        label_color = (72, 80, 92)
+        raw_x = xy[0] + pad
+        raw_y = xy[1] - text_h - pad
+        if raw_y - pad < 0:
+            raw_y = xy[1] + pad
+    else:
+        raw_x, raw_y = xy
+    x = int(max(2, min(raw_x, draw.im.size[0] - text_w - pad * 2 - 2)))
+    y = int(max(2, min(raw_y, draw.im.size[1] - text_h - pad * 2 - 2)))
+    box = (x - pad, y - pad, x + text_w + pad, y + text_h + pad)
     draw.rounded_rectangle(
         box,
-        radius=max(3, pad),
-        fill=label_color + (220,),
-        outline=(255, 255, 255, 210),
-        width=1,
+        radius=max(2, pad),
+        fill=tuple(int(c) for c in color) + (210,),
     )
     draw.multiline_text(
-        (x + pad, y + pad),
+        (x, y),
         text,
         font=font,
         fill=(255, 255, 255, 255),
@@ -201,12 +273,74 @@ def visualize_concat_col(
 
 
 def label_position(mask: np.ndarray):
-    ys, xs = np.nonzero(mask)
+    num_components, component_map, stats, _ = cv2.connectedComponentsWithStats(
+        mask.astype(np.uint8), 8
+    )
+    if num_components <= 1 or stats[1:, -1].size == 0:
+        return None
+    component_id = int(np.argmax(stats[1:, -1]) + 1)
+    ys, xs = np.nonzero(component_map == component_id)
     if len(xs) == 0:
         return None
-    x0, x1 = int(xs.min()), int(xs.max())
-    y0, y1 = int(ys.min()), int(ys.max())
-    return int(np.median(xs)), int(np.median(ys)), (x0, y0, x1, y1)
+    x0 = int(stats[component_id, cv2.CC_STAT_LEFT])
+    y0 = int(stats[component_id, cv2.CC_STAT_TOP])
+    width = int(stats[component_id, cv2.CC_STAT_WIDTH])
+    height = int(stats[component_id, cv2.CC_STAT_HEIGHT])
+    return (
+        int(np.median(xs)),
+        int(np.median(ys)),
+        (x0, y0, x0 + width - 1, y0 + height - 1),
+    )
+
+
+def draw_segmentation_label(
+    draw: ImageDraw.ImageDraw,
+    xy,
+    text: Any,
+    color,
+    font,
+) -> None:
+    """Draw a segmentation label using the reference PIL overlay style."""
+    x = int(round(xy[0]))
+    y = int(round(xy[1]))
+    max_text_width = max(80, int(draw.im.size[0] * 0.46))
+    text = wrap_label_text(text, font, max_text_width)
+    if not text:
+        return
+
+    bbox = draw.multiline_textbbox(
+        (x, y), text, font=font, stroke_width=1, spacing=2
+    )
+    pad = max(3, int(getattr(font, "size", 12) * 0.22))
+    text_width = bbox[2] - bbox[0]
+    text_height = bbox[3] - bbox[1]
+    x = max(2, min(x, draw.im.size[0] - text_width - pad * 2 - 2))
+    y = max(2, min(y, draw.im.size[1] - text_height - pad * 2 - 2))
+    bbox = draw.multiline_textbbox(
+        (x, y), text, font=font, stroke_width=1, spacing=2
+    )
+    box = (bbox[0] - pad, bbox[1] - pad, bbox[2] + pad, bbox[3] + pad)
+
+    label_color = tuple(int(c) for c in color)
+    if sum(label_color) > 650:
+        label_color = (72, 80, 92)
+    draw.rounded_rectangle(
+        box,
+        radius=max(3, pad),
+        fill=label_color + (220,),
+        outline=(255, 255, 255, 210),
+        width=1,
+    )
+    draw.multiline_text(
+        (x, y),
+        text,
+        font=font,
+        fill=(255, 255, 255, 255),
+        stroke_width=1,
+        stroke_fill=(0, 0, 0, 255),
+        spacing=2,
+        align="center",
+    )
 
 
 def overlay_segments(
@@ -215,6 +349,7 @@ def overlay_segments(
     alpha: float = 0.55,
     min_label_area: int = 80,
     max_labels: int = 120,
+    font_size: int = 0,
 ) -> Image.Image:
     overlay = np.asarray(image.convert("RGB"), dtype=np.uint8).copy()
     draw_items = []
@@ -260,18 +395,37 @@ def overlay_segments(
     for _, pos, bbox, label, color in sorted(
         draw_items, key=lambda x: x[0], reverse=True
     )[:max_labels]:
-        font_size = xsam_label_font_size(out.width, out.height, bbox)
-        font_cache.setdefault(font_size, load_font(font_size))
-        draw_label(
+        resolved_font_size = (
+            font_size
+            if font_size and font_size > 0
+            else xsam_label_font_size(out.width, out.height, bbox)
+        )
+        font_cache.setdefault(
+            resolved_font_size, load_font(resolved_font_size, bold=True)
+        )
+        draw_segmentation_label(
             draw,
             pos,
             label,
             color,
-            font_cache[font_size],
-            max_label_chars=96,
-            anchor="top_left",
+            font_cache[resolved_font_size],
         )
     return out.convert("RGB")
+
+
+def overlay_segments_with_config(
+    image: Image.Image,
+    segments: list[dict],
+    config: VisualizationConfig,
+) -> Image.Image:
+    return overlay_segments(
+        image,
+        segments,
+        config.alpha,
+        config.min_label_area,
+        config.max_labels,
+        config.font_size,
+    )
 
 
 def overlay_rgb_mask(
@@ -321,10 +475,7 @@ def _category_is_thing(category: dict) -> bool:
     return True
 
 
-def _category_color(category: dict, palette, fallback_id: int):
-    color = category.get("color") if isinstance(category, dict) else None
-    if isinstance(color, (list, tuple)) and len(color) >= 3:
-        return tuple(int(c) for c in color[:3])
+def _category_color(_category: dict, palette, fallback_id: int):
     return palette[int(fallback_id) % len(palette)]
 
 
@@ -338,7 +489,6 @@ def visualize_gcg_prediction(
     config = ensure_config(config)
     palette = palette or build_palette()
     phrases = prediction.get("gcg_phrases", [])
-    colors = prediction.get("colors", [])
     segments = []
     for idx, segmentation in enumerate(prediction.get("segmentation", [])):
         mask = decode_rle(segmentation)
@@ -350,17 +500,14 @@ def visualize_gcg_prediction(
         if area == 0:
             continue
         label = phrases[idx] if idx < len(phrases) else f"mask-{idx}"
-        color = (
-            tuple(int(c) for c in colors[idx][:3])
-            if idx < len(colors)
-            else color_for_segment(
-                palette, idx, idx, f"{prediction.get('image_id')}-{idx}"
-            )
+        color = color_for_segment(
+            palette,
+            None,
+            idx,
+            f"{prediction.get('image_id')}-{idx}",
         )
         segments.append({"mask": mask, "area": area, "label": label, "color": color})
-    return overlay_segments(
-        image, segments, config.alpha, config.min_label_area, config.max_labels
-    )
+    return overlay_segments_with_config(image, segments, config)
 
 
 def visualize_gcg_segmentation(
@@ -420,16 +567,13 @@ def visualize_panoptic_prediction(
         else:
             label = category["name"]
         category_counts[category_id] = category_counts.get(category_id, 0) + 1
-        base_color = _category_color(category, palette, category_id)
         color = (
-            color_for_segment([base_color], 0, idx, segment_id)
+            color_for_segment(palette, category_id, idx, segment_id)
             if is_thing
-            else base_color
+            else _category_color(category, palette, category_id)
         )
         segments.append({"mask": mask, "area": area, "label": label, "color": color})
-    return overlay_segments(
-        image, segments, config.alpha, config.min_label_area, config.max_labels
-    )
+    return overlay_segments_with_config(image, segments, config)
 
 
 def visualize_panoptic_segmentation(
@@ -497,9 +641,7 @@ def visualize_semantic_segmentation(
                 "color": _category_color(category, palette, category_id),
             }
         )
-    return overlay_segments(
-        image, segments, config.alpha, config.min_label_area, config.max_labels
-    )
+    return overlay_segments_with_config(image, segments, config)
 
 
 def visualize_binary_segmentation(
@@ -540,13 +682,12 @@ def visualize_binary_segmentation(
             if area
             else []
         )
-    return overlay_segments(
-        image, segments, config.alpha, config.min_label_area, config.max_labels
-    )
+    return overlay_segments_with_config(image, segments, config)
 
 
 # Detection
 
+_DETECTION_LABEL_BOX_WIDTH_RATIO = 1.2
 
 PERSON_SKELETON_CONNECTIONS = [
     ("nose", "left eye"),
@@ -618,25 +759,33 @@ def detection_font_size(width: int, height: int, config: VisualizationConfig) ->
 
 
 def draw_bbox(draw, bbox, color, width: int):
-    draw.rectangle(
-        [tuple(bbox[:2]), tuple(bbox[2:])], outline=tuple(color) + (235,), width=width
-    )
+    x0, y0, x1, y1 = [int(round(value)) for value in bbox]
+    for offset in range(width):
+        draw.rectangle(
+            [x0 - offset, y0 - offset, x1 + offset, y1 + offset],
+            outline=tuple(color) + (235,),
+            width=1,
+        )
 
 
 def draw_point(draw, point, color, radius: int):
-    x, y = point
+    x, y = [int(round(value)) for value in point]
     draw.ellipse(
         (x - radius, y - radius, x + radius, y + radius),
-        fill=tuple(color) + (235,),
-        outline=(255, 255, 255, 230),
-        width=1,
+        fill=tuple(color) + (170,),
+        outline=tuple(color) + (255,),
+        width=max(1, radius // 3),
     )
 
 
 def draw_polygon(draw, polygon, color, width: int):
+    points = [(int(round(x)), int(round(y))) for x, y in polygon]
+    if len(points) < 3:
+        return
+    draw.polygon(points, fill=tuple(color) + (45,))
     draw.line(
-        list(polygon) + [polygon[0]],
-        fill=tuple(color) + (235,),
+        points + [points[0]],
+        fill=tuple(color) + (245,),
         width=width,
         joint="curve",
     )
@@ -646,44 +795,84 @@ def primitive_area(primitive):
     kind = primitive.get("kind")
     if kind == "bbox":
         x0, y0, x1, y1 = primitive["bbox"]
-        return max(0.0, x1 - x0) * max(0.0, y1 - y0)
+        return max(1.0, (x1 - x0) * (y1 - y0))
     if kind == "point":
-        return 1
+        return 1.0
+    if kind == "mask":
+        return float(primitive.get("area", 0))
     if kind == "polygon":
-        xs = [p[0] for p in primitive["polygon"]]
-        ys = [p[1] for p in primitive["polygon"]]
-        return max(1.0, (max(xs) - min(xs)) * (max(ys) - min(ys)))
+        points = list(primitive["polygon"])
+        area = 0.0
+        for (x0, y0), (x1, y1) in zip(points, points[1:] + points[:1]):
+            area += x0 * y1 - x1 * y0
+        return max(1.0, abs(area) / 2.0)
     if kind == "keypoint":
         bbox = primitive.get("bbox")
         if bbox:
             x0, y0, x1, y1 = bbox
-            return max(0.0, x1 - x0) * max(0.0, y1 - y0)
-        return max(1, len(primitive.get("keypoints", {})))
-    return primitive.get("area", 0)
+            return max(1.0, (x1 - x0) * (y1 - y0))
+    return 1.0
+
+
+def canonical_keypoint_name(name: Any) -> str:
+    return " ".join(str(name).strip().lower().replace("_", " ").split())
 
 
 def select_keypoint_connections(primitive):
+    keypoint_type = str(primitive.get("keypoint_type", "")).lower()
     context = " ".join(
-        str(primitive.get(k, "")).lower()
-        for k in ("keypoint_type", "keypoint_context", "label")
+        str(primitive.get(key, "")).lower()
+        for key in ("keypoint_type", "keypoint_context", "label")
     )
-    if "hand" in context:
+    keypoints = {
+        canonical_keypoint_name(name) for name in primitive.get("keypoints", {})
+    }
+    if keypoint_type == "hand" or "wrist" in keypoints:
         return HAND_SKELETON_CONNECTIONS
-    if "animal" in context or "ap-10k" in context or "ap10k" in context:
+    if "ap-10k" in context or "ap10k" in context:
         return ANIMAL_SKELETON_CONNECTIONS
-    return PERSON_SKELETON_CONNECTIONS
+    if "coco" in context:
+        return PERSON_SKELETON_CONNECTIONS
+    if keypoint_type in {"animal", "quadruped"} or {
+        "root of tail",
+        "left front paw",
+    } & keypoints:
+        return ANIMAL_SKELETON_CONNECTIONS
+    if keypoint_type == "person" or {"left wrist", "right ankle"} & keypoints:
+        return PERSON_SKELETON_CONNECTIONS
+    return ANIMAL_SKELETON_CONNECTIONS
 
 
 def draw_keypoint_skeleton(draw, primitive, width: int):
-    keypoints = {str(k).lower(): v for k, v in primitive.get("keypoints", {}).items()}
+    keypoints = {
+        canonical_keypoint_name(name): point
+        for name, point in primitive.get("keypoints", {}).items()
+    }
     color = tuple(int(c) for c in primitive.get("color", (255, 0, 0)))
     for a, b in select_keypoint_connections(primitive):
-        if a in keypoints and b in keypoints:
+        start = keypoints.get(canonical_keypoint_name(a))
+        end = keypoints.get(canonical_keypoint_name(b))
+        if start is not None and end is not None:
             draw.line(
-                [tuple(keypoints[a]), tuple(keypoints[b])],
-                fill=color + (205,),
-                width=width,
+                [tuple(start), tuple(end)],
+                fill=color + (230,),
+                width=max(2, width),
             )
+
+
+def keypoint_radius_for_primitive(
+    primitive, image_size, config: VisualizationConfig, fallback_radius: int
+) -> int:
+    if config.keypoint_radius and config.keypoint_radius > 0:
+        return config.keypoint_radius
+    bbox = primitive.get("bbox")
+    if bbox:
+        x0, y0, x1, y1 = bbox
+        bbox_area = max(1.0, (x1 - x0) * (y1 - y0))
+        bbox_radius = max(2, min(5, int((bbox_area / 10000) ** 0.5 * 4)))
+        image_floor = max(3, int(round(min(image_size) / 260)))
+        return max(bbox_radius, image_floor)
+    return max(3, fallback_radius // 2)
 
 
 def overlay_primitives(
@@ -714,13 +903,11 @@ def overlay_primitives(
 
     out = image.convert("RGB")
     if mask_segments:
-        out = overlay_segments(
-            out, mask_segments, config.alpha, config.min_label_area, config.max_labels
-        )
+        out = overlay_segments_with_config(out, mask_segments, config)
 
     out = out.convert("RGBA")
     draw = ImageDraw.Draw(out, "RGBA")
-    font = load_font(detection_font_size(out.width, out.height, config))
+    font = load_font(detection_font_size(out.width, out.height, config), bold=True)
     line_width = (
         config.draw_width
         if config.draw_width and config.draw_width > 0
@@ -756,12 +943,10 @@ def overlay_primitives(
             if bbox:
                 draw_bbox(draw, bbox, color, line_width)
                 label_xy = (bbox[0], bbox[1])
-            keypoint_radius = (
-                config.keypoint_radius
-                if config.keypoint_radius > 0
-                else max(3, point_radius - 1)
+            keypoint_radius = keypoint_radius_for_primitive(
+                primitive, out.size, config, point_radius
             )
-            draw_keypoint_skeleton(draw, primitive, max(2, keypoint_radius))
+            draw_keypoint_skeleton(draw, primitive, line_width)
             for point in primitive.get("keypoints", {}).values():
                 draw_point(draw, point, color, keypoint_radius)
 
@@ -770,7 +955,11 @@ def overlay_primitives(
             bbox = primitive.get("bbox")
             if bbox:
                 label_max_width = max(
-                    80, int((bbox[2] - bbox[0]) * config.label_box_width_ratio)
+                    80,
+                    int(
+                        (bbox[2] - bbox[0])
+                        * _DETECTION_LABEL_BOX_WIDTH_RATIO
+                    ),
                 )
             draw_label(
                 draw,
