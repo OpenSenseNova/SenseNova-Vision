@@ -16,7 +16,7 @@ Options:
   --model_path PATH        SenseNova-Vision model directory or Hugging Face repo id.
                            Default: sensenova/SenseNova-Vision-7B-MoT, or MODEL_PATH if set.
   --output_dir DIR         Output directory. Default: ./output/benchmark
-  --tasks TASKS            all | seg | depth | normal | detection. Comma-separated values are supported.
+  --tasks TASKS            all | seg | depth | normal | detection | recon3d | camera_pose. Comma-separated values are supported.
   --sub_tasks TASKS        Dataset/sub-task selector. Default: all. Comma-separated values are supported.
                           Supported segment subtasks: pan_coco_val, ade20k_pan_val, gcg_val, gcg_test,
                           refcoco_val, refcocop_val, refcocog_val, reason_val, reason_test.
@@ -132,6 +132,7 @@ model_path="${MODEL_PATH_ARG}"
 data_root="${data_root_arg:-${repo_dir}/datas}"
 geometry_data_root="${data_root%/}/geometry_data"
 detection_data_root="${data_root%/}/detection_data"
+multiview3d_data_root="${data_root%/}/multiview3d_data"
 seg_jsonl_path_root="$(dirname -- "${data_root%/}")"
 jsonl_root="${JSONL_ROOT_ARG:-${repo_dir}/jsonl_generate}"
 detection_jsonl_dir="${jsonl_root}/detection"
@@ -156,9 +157,9 @@ validate_tasks() {
   fi
   for task in "${task_items[@]}"; do
     case "${task}" in
-      seg|depth|normal|detection) ;;
+      seg|depth|normal|detection|recon3d|camera_pose) ;;
       "") echo "[ERROR] Empty task in tasks='${raw_tasks}'." 1>&2; return 1 ;;
-      *) echo "[ERROR] Unknown task: ${task}. Supported: all, seg, depth, normal, detection" 1>&2; return 1 ;;
+      *) echo "[ERROR] Unknown task: ${task}. Supported: all, seg, depth, normal, detection, recon3d, camera_pose" 1>&2; return 1 ;;
     esac
   done
 }
@@ -267,7 +268,9 @@ for required_script in \
   inference/benchmark/batch_panoptic_segment.py \
   inference/benchmark/batch_gcg_segment.py \
   inference/benchmark/batch_binary_segment.py \
-  inference/benchmark/batch_detect.py; do
+  inference/benchmark/batch_detect.py \
+  inference/benchmark/batch_recon3d.py \
+  inference/benchmark/batch_camera_pose.py; do
   if [ ! -f "${repo_dir}/${required_script}" ]; then
     echo "[ERROR] required script not found: ${repo_dir}/${required_script}" 1>&2
     exit 2
@@ -292,6 +295,10 @@ validate_selected_inputs() {
 
   if want_task "detection"; then
     require_dir "${detection_data_root}" "detection_data_root" || missing=1
+  fi
+
+  if want_task "recon3d" || want_task "camera_pose"; then
+    require_dir "${multiview3d_data_root}" "multiview3d_data_root" || missing=1
   fi
 
   return "${missing}"
@@ -650,6 +657,36 @@ run_detection() {
   done
 }
 
+run_recon3d() {
+  local datasets=(7scenes eth3d)
+  local out_dir="${OUTPUT_DIR%/}"
+  for test_dataset in "${datasets[@]}"; do
+    local job_name="recon3d_${test_dataset}"
+    launch_job "${job_name}" "${LOG_DIR}/${job_name}.log" \
+      "${python_cmd}" inference/benchmark/batch_recon3d.py \
+        --model_path "${model_path}" \
+        --dataset "${test_dataset}" \
+        --data_root "${multiview3d_data_root}" \
+        --output_dir "${out_dir}" \
+        "${total_test_length_args[@]}"
+  done
+}
+
+run_camera_pose() {
+  local datasets=(re10k co3dv2)
+  local out_dir="${OUTPUT_DIR%/}"
+  for test_dataset in "${datasets[@]}"; do
+    local job_name="camera_pose_${test_dataset}"
+    launch_job "${job_name}" "${LOG_DIR}/${job_name}.log" \
+      "${python_cmd}" inference/benchmark/batch_camera_pose.py \
+        --model_path "${model_path}" \
+        --dataset "${test_dataset}" \
+        --data_root "${multiview3d_data_root}" \
+        --output_dir "${out_dir}" \
+        "${total_test_length_args[@]}"
+  done
+}
+
 echo "============================================================"
 echo " Launching local benchmark inference"
 echo "------------------------------------------------------------"
@@ -685,6 +722,12 @@ if want_task "normal"; then
 fi
 if want_task "detection"; then
   run_detection
+fi
+if want_task "recon3d"; then
+  run_recon3d
+fi
+if want_task "camera_pose"; then
+  run_camera_pose
 fi
 
 wait

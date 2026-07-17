@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import json
-import os
 
 from PIL import Image, ImageFile, PngImagePlugin
 
@@ -43,7 +42,8 @@ class SftJSONLIterableDataset(JSONLIterableDataset):
         """
         self.transform = transform
         self.tokenizer = tokenizer
-        self.frame_sampler = frame_sampler
+        # Keep the argument for existing config compatibility. VLM media inputs
+        # are intentionally limited to images (including multi-image samples).
         self.task_prompt = task_prompt
         super().__init__(
             dataset_name,
@@ -58,21 +58,14 @@ class SftJSONLIterableDataset(JSONLIterableDataset):
             shuffle_seed,
         )
 
-    def _load_raw_images(self, data_item, image_dir):
-        if "image" in data_item:
-            return self.load_image_list(image_dir, data_item["image"])
-
-        if "video" not in data_item:
-            return []
-
-        raw_images = self.frame_sampler(os.path.join(image_dir, data_item["video"]))
-        special_tokens = "<image>" * len(raw_images)
-        for item in data_item["conversations"]:
-            if "<video>" in item["value"]:
-                item["value"] = item["value"].replace("<video>", special_tokens)
-                return raw_images
-
-        raise ValueError("Cannot find <video> in the conversation!")
+    def _load_raw_images(self, data_item, data_roots):
+        if "video" in data_item:
+            raise ValueError("video inputs are not supported")
+        return self.load_image_list(
+            data_roots,
+            data_item.get("image"),
+            role=self.INPUT_ROLE,
+        )
 
     def _build_elements(self, data, num_images):
         elements = []
@@ -125,7 +118,7 @@ class SftJSONLIterableDataset(JSONLIterableDataset):
 
         while True:
             data_paths_per_worker_ = data_paths_per_worker[row_start_id:]
-            for row_idx, (data, image_dir) in enumerate(
+            for row_idx, (data, data_roots) in enumerate(
                 data_paths_per_worker_, start=row_start_id
             ):
                 num_tokens = 0
@@ -135,7 +128,7 @@ class SftJSONLIterableDataset(JSONLIterableDataset):
 
                 try:
                     data_item = json.loads(data)
-                    raw_images = self._load_raw_images(data_item, image_dir)
+                    raw_images = self._load_raw_images(data_item, data_roots)
                 except Exception as exc:
                     self.log_bad_sample(worker_id, row_idx, exc)
                     continue

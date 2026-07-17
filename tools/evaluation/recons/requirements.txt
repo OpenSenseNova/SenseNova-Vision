@@ -1,0 +1,13 @@
+torch==2.5.1
+torchvision==0.20.1
+numpy<2
+pillow
+imageio-ffmpeg
+opencv-python
+tqdm
+pandas
+rootutils
+hydra-core==1.3.2
+hydra-colorlog
+open3d  # for point map evaluation
+pytubefix  # for re10k downloader

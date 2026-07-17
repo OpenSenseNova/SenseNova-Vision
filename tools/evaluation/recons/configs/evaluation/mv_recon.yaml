@@ -1,0 +1,25 @@
+# @package _global_
+
+defaults:
+  - override /data: mv_recon
+
+varint:  # temporary variables for variable interpolation
+  predict_root:
+
+name: mv_recon
+eval_model_name: SenseNova-Vision
+
+eval_datasets:
+  - 7scenes-kf100
+  - ETH3D-nf10
+
+predict_results:
+  - ${varint.predict_root}/recon3d/7scenes_kf100
+  - ${varint.predict_root}/recon3d/eth3d_nf10
+
+no_crop: True
+load_img_size: 512
+device: cuda
+verbose: False
+seed: 42
+save_suffix: null

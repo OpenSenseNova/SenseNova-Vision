@@ -144,7 +144,7 @@ class EditJSONLIterableDataset(JSONLIterableDataset):
 
         while True:
             data_paths_per_worker_ = data_paths_per_worker[row_start_id:]
-            for row_idx, (data, image_dir) in enumerate(
+            for row_idx, (data, data_roots) in enumerate(
                 data_paths_per_worker_, start=row_start_id
             ):
                 sample = self.new_sample()
@@ -153,7 +153,11 @@ class EditJSONLIterableDataset(JSONLIterableDataset):
 
                     sample = self._add_image(
                         sample,
-                        self.load_image(image_dir, data_item["image"][0]),
+                        self.load_image(
+                            data_roots,
+                            data_item["image"][0],
+                            role=self.INPUT_ROLE,
+                        ),
                         need_loss=False,
                         need_vae=True,
                         need_vit=True,
@@ -163,7 +167,11 @@ class EditJSONLIterableDataset(JSONLIterableDataset):
                     )
                     sample = self._add_image(
                         sample,
-                        self.load_image(image_dir, data_item["image"][1]),
+                        self.load_image(
+                            data_roots,
+                            data_item["image"][1],
+                            role=self.OUTPUT_ROLE,
+                        ),
                         need_loss=True,
                         need_vae=False,
                         need_vit=False,

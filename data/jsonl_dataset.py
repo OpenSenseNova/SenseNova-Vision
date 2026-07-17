@@ -10,6 +10,9 @@ from .distributed_iterable_dataset import DistributedIterableDataset
 
 class JSONLIterableDataset(DistributedIterableDataset):
 
+    INPUT_ROLE = "input"
+    OUTPUT_ROLE = "output"
+
     def __init__(
         self,
         dataset_name,
@@ -43,7 +46,7 @@ class JSONLIterableDataset(DistributedIterableDataset):
         shuffle_seed,
     ):
         data_paths = []
-        for jsonl_path, image_dir, num_data_point in zip(
+        for jsonl_path, data_dir, num_data_point in zip(
             jsonl_path_list, data_dir_list, num_used_data
         ):
             with open(jsonl_path, 'r') as f:
@@ -52,7 +55,8 @@ class JSONLIterableDataset(DistributedIterableDataset):
                 self.rng.seed(shuffle_seed)
                 self.rng.shuffle(raw_data)
             raw_data = raw_data[:num_data_point]
-            data_paths.extend((json_data, image_dir) for json_data in raw_data)
+            data_roots = self._normalize_data_dir(data_dir)
+            data_paths.extend((json_data, data_roots) for json_data in raw_data)
         return data_paths
 
     def get_resume_row(self, worker_id):
@@ -81,12 +85,64 @@ class JSONLIterableDataset(DistributedIterableDataset):
             'num_tokens': 0,
         }
 
-    def load_image(self, image_dir, image_path):
-        return pil_img2rgb(load_image(os.path.join(image_dir, image_path)))
+    @staticmethod
+    def _normalize_data_dir(data_dir):
+        """Normalize legacy and role-aware media root configurations."""
+        if isinstance(data_dir, (str, os.PathLike)):
+            root = os.fspath(data_dir)
+            return {
+                "input_dir": root,
+                "output_dir": root,
+            }
 
-    def load_image_list(self, image_dir, image_paths):
+        if not isinstance(data_dir, dict):
+            raise TypeError(
+                "data_dir must be a path string or a dict containing "
+                "input_dir/output_dir"
+            )
+
+        roots = {
+            "input_dir": data_dir.get("input_dir"),
+            "output_dir": data_dir.get("output_dir"),
+        }
+        if roots["input_dir"] is None and roots["output_dir"] is None:
+            raise ValueError(
+                "data_dir dict must define at least one of input_dir/output_dir"
+            )
+        return roots
+
+    @staticmethod
+    def _is_explicit_path(path):
+        path = os.fspath(path)
+        return os.path.isabs(path) or "://" in path
+
+    def resolve_media_path(self, data_roots, media_path, role):
+        data_roots = self._normalize_data_dir(data_roots)
+        media_path = os.fspath(media_path)
+        if self._is_explicit_path(media_path):
+            return media_path
+
+        if role not in (self.INPUT_ROLE, self.OUTPUT_ROLE):
+            raise ValueError(f"unsupported media role: {role}")
+
+        root_key = f"{role}_dir"
+        root = data_roots.get(root_key)
+        if root in (None, ""):
+            raise ValueError(
+                f"relative {role} path {media_path!r} requires {root_key}"
+            )
+        return os.path.join(os.fspath(root), media_path)
+
+    def load_image(self, data_roots, image_path, role=INPUT_ROLE):
+        image_path = self.resolve_media_path(data_roots, image_path, role)
+        return pil_img2rgb(load_image(image_path))
+
+    def load_image_list(self, data_roots, image_paths, role=INPUT_ROLE):
         if image_paths is None:
             return []
         if not isinstance(image_paths, list):
             image_paths = [image_paths]
-        return [self.load_image(image_dir, image_path) for image_path in image_paths]
+        return [
+            self.load_image(data_roots, image_path, role=role)
+            for image_path in image_paths
+        ]

@@ -92,6 +92,14 @@ def resolve_pose_string(pose_str: str) -> Optional[dict]:
         )
         return None
 
+    if len(quat_list) != len(offset_array):
+        print(
+            f"Warning: quat/scale count mismatch: "
+            f"offset={len(quat_list)}, scale={len(offset_array)}. "
+            "Skipping sample."
+        )
+        return None
+
     try:
         offset_array = np.asarray(offset_array, dtype=np.float32)
         scale_array = np.asarray(scale_array, dtype=np.float32)

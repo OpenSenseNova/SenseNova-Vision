@@ -1,0 +1,354 @@
+{
+  "default_dataset": "cdla-layout",
+  "datasets": {
+    "cdla-layout": {
+      "adapter": "labelme",
+      "default_input": "data",
+      "default_output": "data/RexOmni/Layout/CDLA/json/processed_trainv2.jsonl",
+      "annotation_globs": ["Layout/CDLA_DATASET/train/*.json"],
+      "image_globs": ["Layout/CDLA_DATASET/train/*.jpg"],
+      "require_images": true,
+      "category_aliases": {}
+    },
+    "doclaynet-core-layout": {
+      "adapter": "coco",
+      "default_input": "data",
+      "default_output": "data/RexOmni/Layout/DocLayNet_core/json/processed_trainv2.jsonl",
+      "annotation_files": ["Layout/DocLayNet_core/COCO/train.json"],
+      "image_prefix": "Layout/DocLayNet_core/PNG",
+      "excluded_categories": [],
+      "category_aliases": {}
+    },
+    "tablebank-layout": {
+      "adapter": "coco",
+      "default_input": "data",
+      "default_output": "data/RexOmni/Layout/TableBank/json/processed_trainv2.jsonl",
+      "annotation_files": [
+        "Layout/TableBank/TableBank/Detection/annotations/tablebank_latex_train.json",
+        "Layout/TableBank/TableBank/Detection/annotations/tablebank_word_train.json"
+      ],
+      "image_prefix": "Layout/TableBank/TableBank/Detection/images",
+      "excluded_categories": [],
+      "category_aliases": {}
+    },
+    "tabrecset-layout": {
+      "adapter": "labelme",
+      "default_input": "data",
+      "default_output": "data/RexOmni/Layout/TabRecSet/json/processed_trainv2.jsonl",
+      "annotation_globs": [
+        "Layout/TabRecSet/TabRecSet(CurveTabSet)/TD annotation/chinese/*.json",
+        "Layout/TabRecSet/TabRecSet(CurveTabSet)/TD annotation/english/*.json"
+      ],
+      "image_globs": [
+        "Layout/TabRecSet/TabRecSet(CurveTabSet)/image/chinese_*/*.jpg",
+        "Layout/TabRecSet/TabRecSet(CurveTabSet)/image/english_*/*.jpg"
+      ],
+      "require_images": true,
+      "strip_trailing_digits": true,
+      "category_aliases": {}
+    },
+    "os-atlas-desktop-gui": {
+      "adapter": "json_records",
+      "default_input": "data",
+      "default_output": "data/RexOmni/GUI/OS-Atlas-data/json/processed_desktop_domain_train.jsonl",
+      "bbox_normalized": true,
+      "category_aliases": {},
+      "sources": [
+        {
+          "annotation": "GUI/OS-Atlas-data/desktop_domain/linux_splited.json",
+          "image_root": "GUI/OS-Atlas-data/desktop_domain/linux_images",
+          "image_prefix": "GUI/OS-Atlas-data/desktop_domain/linux_images",
+          "boxes_field": "elements",
+          "emit_per_box": true,
+          "bbox_normalized": true
+        },
+        {
+          "annotation": "GUI/OS-Atlas-data/desktop_domain/macos_splited.json",
+          "image_root": "GUI/OS-Atlas-data/desktop_domain/macos_images",
+          "image_prefix": "GUI/OS-Atlas-data/desktop_domain/macos_images",
+          "boxes_field": "elements",
+          "emit_per_box": true,
+          "bbox_normalized": true
+        },
+        {
+          "annotation": "GUI/OS-Atlas-data/desktop_domain/windows_splited.json",
+          "image_root": "GUI/OS-Atlas-data/desktop_domain/windows_images",
+          "image_prefix": "GUI/OS-Atlas-data/desktop_domain/windows_images",
+          "boxes_field": "elements",
+          "emit_per_box": true,
+          "bbox_normalized": true
+        }
+      ]
+    },
+    "os-atlas-mobile-gui": {
+      "adapter": "json_records",
+      "default_input": "data",
+      "default_output": "data/RexOmni/GUI/OS-Atlas-data/json/processed_mobile_domain_train.jsonl",
+      "category_aliases": {},
+      "sources": [
+        {
+          "annotation": "GUI/OS-Atlas-data/mobile_domain/amex_raw.json",
+          "image_root": "GUI/OS-Atlas-data/mobile_domain/amex_images",
+          "image_prefix": "GUI/OS-Atlas-data/mobile_domain/amex_images",
+          "boxes_field": "elements",
+          "emit_per_box": true,
+          "bbox_normalized": true
+        },
+        {
+          "annotation": "GUI/OS-Atlas-data/mobile_domain/aw_mobile.json",
+          "image_root": "GUI/OS-Atlas-data/mobile_domain/mobile_images",
+          "image_prefix": "GUI/OS-Atlas-data/mobile_domain/mobile_images",
+          "boxes_field": "elements",
+          "emit_per_box": true,
+          "bbox_normalized": true
+        },
+        {
+          "annotation": "GUI/OS-Atlas-data/mobile_domain/uibert_raw.json",
+          "image_root": "GUI/OS-Atlas-data/mobile_domain/UIBert",
+          "image_prefix": "GUI/OS-Atlas-data/mobile_domain/UIBert",
+          "boxes_field": "elements",
+          "emit_per_box": true,
+          "bbox_normalized": true
+        }
+      ]
+    },
+    "os-atlas-rico-gui": {
+      "adapter": "json_records",
+      "default_input": "data",
+      "default_output": "data/RexOmni/GUI/OS-Atlas-data/json/processed_rico_train.jsonl",
+      "category_aliases": {},
+      "sources": [
+        {
+          "annotation": "GUI/OS-Atlas-data/mobile_domain/widget_captioning.json",
+          "image_root": "GUI/OS-Atlas-data/mobile_domain/rico_imgs/combined",
+          "image_prefix": "GUI/OS-Atlas-data/mobile_domain/rico_imgs/combined",
+          "emit_per_box": true,
+          "bbox_normalized": true
+        }
+      ]
+    },
+    "os-atlas-web-gui": {
+      "adapter": "json_records",
+      "default_input": "data",
+      "default_output": "data/RexOmni/GUI/OS-Atlas-data/json/processed_web_domain_train.jsonl",
+      "category_aliases": {},
+      "sources": [
+        {
+          "annotation": "GUI/OS-Atlas-data/web_domain/fineweb_3m.json",
+          "image_root": "GUI/OS-Atlas-data/web_domain/fineweb_3m",
+          "image_prefix": "GUI/OS-Atlas-data/web_domain/fineweb_3m",
+          "boxes_field": "elements",
+          "emit_per_box": true,
+          "bbox_normalized": true
+        },
+        {
+          "annotation": "GUI/OS-Atlas-data/web_domain/seeclick_web.json",
+          "image_root": "GUI/OS-Atlas-data/web_domain/seeclick_web_images/seeclick_web_imgs",
+          "image_prefix": "GUI/OS-Atlas-data/web_domain/seeclick_web_images/seeclick_web_imgs",
+          "boxes_field": "elements",
+          "emit_per_box": true,
+          "bbox_normalized": true
+        }
+      ]
+    },
+    "showui-desktop-gui": {
+      "adapter": "parquet",
+      "default_input": "data",
+      "default_output": "data/RexOmni/GUI/ShowUI-desktop/json/processed_train.jsonl",
+      "parquet_globs": ["GUI/ShowUI-desktop/data/train-*-of-00034.parquet"],
+      "image_field": "image_url",
+      "embedded_image_field": "image",
+      "phrase_field": "instruction",
+      "bbox_field": "bbox",
+      "bbox_normalized": true,
+      "strip_image_prefix": "screenshots",
+      "image_prefix": "GUI/ShowUI-desktop/images",
+      "category_aliases": {}
+    },
+    "paco-lvis-bbox": {
+      "adapter": "coco",
+      "default_input": "data/PACO",
+      "default_output": "data/PACO/json/processed_bbox_trainv2.jsonl",
+      "annotation_files": ["paco_lvis_v1_train.json"],
+      "image_root": "",
+      "image_prefix": "PACO",
+      "require_images": true,
+      "excluded_categories": [],
+      "category_aliases": {}
+    },
+    "sku110k-bbox": {
+      "adapter": "yolo",
+      "default_input": "data/SKU110k",
+      "default_output": "data/SKU110k/json/processed_bbox_trainv2.jsonl",
+      "coordinate_decimals": 3,
+      "coordinate_offset": 1,
+      "output_image_field": "image_path",
+      "image_extensions": [".jpg", ".jpeg", ".png"],
+      "category_aliases": {},
+      "sources": [
+        {
+          "label_root": "SKU/labels/train",
+          "image_root": "SKU/images/train",
+          "image_prefix": "SKU/images/train",
+          "phrase": "products on the shelf"
+        },
+        {
+          "label_root": "gooreal/labels/train",
+          "image_root": "gooreal/images/train",
+          "image_prefix": "gooreal/images/train",
+          "coordinate_width_scale": 3,
+          "coordinate_height_scale": 2.28,
+          "phrase": "products on the shelf"
+        },
+        {
+          "label_root": "SKU+gooreal/labels/train",
+          "image_root": "SKU+gooreal/images/train",
+          "image_prefix": "SKU+gooreal/images/train",
+          "coordinate_width_scale": 3,
+          "coordinate_height_scale": 2.28,
+          "phrase": "products on the shelf"
+        }
+      ]
+    },
+    "humanref-bbox": {
+      "adapter": "unified_bbox",
+      "default_input": "data/humanref_cot_45k_converted",
+      "default_output": "data/humanref_cot_45k_converted/json/processed_bbox_trainv2.jsonl",
+      "annotation_files": ["all_annotations.json"],
+      "input_format": "json_array",
+      "bbox_format": "xyxy",
+      "output_image_field": "image_path",
+      "preserve_annotation_fields": ["reasoning"],
+      "require_images": true,
+      "category_aliases": {}
+    },
+    "rexverse-onesentence-bbox": {
+      "adapter": "unified_bbox",
+      "default_input": "data/RexVerse-2M/rexverse2M_onesentense",
+      "default_output": "data/RexVerse-2M/rexverse2M_onesentense/json/processed_bbox_trainv2.jsonl",
+      "annotation_files": ["annotations.jsonl"],
+      "input_format": "jsonl",
+      "bbox_format": "xywh",
+      "output_image_field": "image_path",
+      "require_images": true,
+      "category_aliases": {}
+    },
+    "rexverse-referring-bbox": {
+      "adapter": "unified_bbox",
+      "default_input": "data/RexVerse-2M/rexverse2M_referring",
+      "default_output": "data/RexVerse-2M/rexverse2M_referring/json/processed_bbox_trainv2.jsonl",
+      "annotation_files": ["annotations.jsonl"],
+      "input_format": "jsonl",
+      "bbox_format": "xywh",
+      "output_image_field": "image_path",
+      "require_images": true,
+      "category_aliases": {}
+    },
+    "egoobjects-bbox": {
+      "adapter": "coco",
+      "default_input": "data/EgoObjects",
+      "default_output": "data/EgoObjects/json/processed_bbox_trainv2.jsonl",
+      "annotation_files": ["EgoObjectsV1_unified_train.json"],
+      "image_file_field": "url",
+      "annotation_phrase_field": "category_freeform",
+      "image_root": "images",
+      "image_prefix": "EgoObjects/images",
+      "require_images": false,
+      "excluded_categories": [],
+      "category_aliases": {}
+    },
+    "v3det-ovd-bbox": {
+      "adapter": "coco",
+      "default_input": "data/V3Det___V3Det/raw",
+      "default_output": "data/V3Det___V3Det/raw/V3Det/json/processed_bbox_trainv2.jsonl",
+      "annotation_files": ["v3det_2023_v1_train_ovd_base.json"],
+      "image_root": "V3Det",
+      "image_prefix": "",
+      "require_images": true,
+      "excluded_categories": [],
+      "category_aliases": {}
+    },
+    "owdod-bbox": {
+      "adapter": "parquet_objects",
+      "default_input": "data/owdod",
+      "default_output": "data/owdod/json/processed_bbox_trainv2.jsonl",
+      "parquet_globs": ["data/train-*.parquet"],
+      "image_name_field": "file_name",
+      "image_field": "image",
+      "objects_field": "objects",
+      "bbox_field": "bbox",
+      "phrase_field": "category",
+      "bbox_format": "xywh",
+      "extract_image_root": "images",
+      "image_prefix": "owdod/images",
+      "category_aliases": {}
+    },
+    "objects365-bbox": {
+      "adapter": "parquet_annotations",
+      "default_input": "data/object365",
+      "default_output": "data/object365/json/processed_bbox_trainv2.jsonl",
+      "parquet_globs": ["data/train-*.parquet"],
+      "image_name_field": "image_path",
+      "image_info_field": "image_info",
+      "annotations_field": "anns_info",
+      "bbox_field": "bbox",
+      "phrase_field": "category",
+      "bbox_format_field": "format",
+      "bbox_format": "xyxy",
+      "strip_image_prefix": "objects365/train/",
+      "image_prefix": "",
+      "excluded_categories": [],
+      "category_aliases": {}
+    },
+    "lvis-fruit-vegetable-bbox": {
+      "adapter": "yolo",
+      "default_input": "data/LVIS_Fruits_And_Vegetables",
+      "default_output": "data/LVIS_Fruits_And_Vegetables/json/processed_bbox_trainv2.jsonl",
+      "class_names_file": "data.yaml",
+      "sources": [
+        {
+          "label_root": "labels/train",
+          "image_root": "images/train",
+          "image_prefix": ""
+        }
+      ],
+      "category_aliases": {}
+    },
+    "sheep-bbox": {
+      "adapter": "coco",
+      "default_input": "data/aerial-sheep-object-detection",
+      "default_output": "data/aerial-sheep-object-detection/json/processed_bbox_trainv2.jsonl",
+      "annotation_files": ["data/_annotations.coco.json"],
+      "image_prefix": "data",
+      "image_root": "data",
+      "require_images": true,
+      "excluded_categories": [],
+      "category_aliases": {}
+    },
+    "football-bbox": {
+      "adapter": "coco",
+      "default_input": "data/football-object-detection",
+      "default_output": "data/football-object-detection/json/processed_bbox_trainv2.jsonl",
+      "annotation_files": ["data/_annotations.coco.json"],
+      "image_prefix": "data",
+      "image_root": "data",
+      "require_images": true,
+      "excluded_categories": [],
+      "category_aliases": {}
+    },
+    "industrial-safety-bbox": {
+      "adapter": "yolo",
+      "default_input": "data/Industrial-Site-Safety-Detection-v1-DATASET",
+      "default_output": "data/Industrial-Site-Safety-Detection-v1-DATASET/json/processed_bbox_trainv2.jsonl",
+      "class_names_file": "6thdataset/data.yaml",
+      "sources": [
+        {
+          "label_root": "6thdataset/labels/train",
+          "image_root": "6thdataset/images/train",
+          "image_prefix": "6thdataset/images/train"
+        }
+      ],
+      "category_aliases": {}
+    }
+  }
+}

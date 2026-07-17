@@ -31,6 +31,7 @@ def main():
         dataset_meta = yaml.safe_load(stream)
 
     dataset_config = DataConfig(grouped_datasets=dataset_meta)
+    grouped_names = list(dataset_meta)
 
     if training_args.visual_und:
         dataset_config.vit_patch_size = model_args.vit_patch_size
@@ -85,8 +86,7 @@ def main():
         )
 
         data = batch.to_dict()
-        grouped_names = data.get("grouped_names", None)
-        batch_group_name = data.get("batch_group_name", None)
+        batch_group_name = data.get("batch_group_name") or []
 
         total_samples = len(data['sample_lens'])
         total_tokens = data['sequence_length']
@@ -105,7 +105,7 @@ def main():
 
         sample_status.append(batch_group_counts)
         tokens_status.append(batch_group_tokens)
-        if curr_step >= training_args.total_steps:
+        if curr_step + 1 >= training_args.total_steps:
             break
     sample_df = pd.DataFrame(sample_status)
     tokens_df = pd.DataFrame(tokens_status)

@@ -95,11 +95,17 @@ class T2IJSONLIterableDataset(JSONLIterableDataset):
 
         while True:
             data_paths_per_worker_ = data_paths_per_worker[row_start_id:]
-            for row_idx, (data, image_dir) in enumerate(data_paths_per_worker_, start=row_start_id):
+            for row_idx, (data, data_roots) in enumerate(
+                data_paths_per_worker_, start=row_start_id
+            ):
                 num_tokens = 0
                 try:
                     data_item = json.loads(data)
-                    image = self.load_image(image_dir, data_item['image'])
+                    image = self.load_image(
+                        data_roots,
+                        data_item['image'],
+                        role=self.OUTPUT_ROLE,
+                    )
                 except Exception as e:
                     self.log_bad_sample(worker_id, row_idx, e)
                     continue

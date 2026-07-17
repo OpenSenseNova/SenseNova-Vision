@@ -1,0 +1,29 @@
+{
+  "default_dataset": "sroie-text-bbox",
+  "datasets": {
+    "sroie-text-bbox": {
+      "default_input": "data/sroie-datasetv2/json/processed_text_line_trainv2.jsonl",
+      "default_output": "jsonl_train/ocr/SROIE/processed_ocr_train.jsonl",
+      "granularity": "text_line",
+      "output_kind": "bbox"
+    },
+    "icdar2013-word-bbox": {
+      "default_input": "data/OCR/icdar2013/json/processed_word_trainv2.jsonl",
+      "default_output": "jsonl_train/ocr/icdar2013/processed_word_bbox_train.jsonl",
+      "granularity": "word",
+      "output_kind": "bbox"
+    },
+    "icdar2015-word-bbox": {
+      "default_input": "data/OCR/icdar2015/json/processed_word_trainv2.jsonl",
+      "default_output": "jsonl_train/ocr/icdar2015/processed_word_bbox_train.jsonl",
+      "granularity": "word",
+      "output_kind": "bbox"
+    },
+    "icdar2015-word-poly": {
+      "default_input": "data/OCR/icdar2015/json/processed_word_trainv2.jsonl",
+      "default_output": "jsonl_train/ocr/icdar2015/processed_word_poly_train.jsonl",
+      "granularity": "word",
+      "output_kind": "polygon"
+    }
+  }
+}

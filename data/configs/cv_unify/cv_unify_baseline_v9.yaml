@@ -930,7 +930,7 @@ recon3d_jsonl_sft:
   weight: 1
 
 # mv camera pose
-vlm_sft_image:
+camera_pose_sft:
   dataset_names:
     - scannetv2_camera_pose_estimate_Spec
     - hypersim_camera_pose_estimate_Spec

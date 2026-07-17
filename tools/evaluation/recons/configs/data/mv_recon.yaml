@@ -1,0 +1,34 @@
+7scenes-kf100:
+  cfg:
+    _target_: datasets.sevenscenes.SevenScenes
+    split: test
+    SEVENSCENES_DIR: datas/7scenes
+    load_img_size: ${load_img_size}
+  sampling:
+    strategy: stride
+    kf_every: 100
+  seq_id_map: datasets/seq-id-maps/7scenes_mv-recon_seq-id-map-kf100.json
+  dist_threshold: 0.05
+
+ETH3D-nf10:
+  cfg:
+    _target_: datasets.eth3d.ETH3D
+    ETH3D_DIR: datas/eth3d
+    load_img_size: ${load_img_size}
+  sampling:
+    strategy: linspace
+    num_frames: 10
+  seq_id_map: datasets/seq-id-maps/ETH3D_mv-recon_seq-id-map-nf10.json
+  dist_threshold: 0.25
+
+DTU:
+  cfg:
+    _target_: datasets.dtu.DTU
+    split: test
+    DTU_DIR: datas/dtu
+    load_img_size: ${load_img_size}
+  sampling:
+    strategy: stride
+    kf_every: 5
+  seq_id_map: datasets/seq-id-maps/DTU_mv-recon_seq-id-map-kf5.json
+  dist_threshold: -1.0  # N/A

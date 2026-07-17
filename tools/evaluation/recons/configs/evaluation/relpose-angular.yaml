@@ -1,0 +1,27 @@
+# @package _global_
+
+defaults:
+  - override /data: relpose-angular
+
+varint:  # temporary variables for variable interpolation
+  predict_root:
+
+name: relpose-angular
+eval_model_name: SenseNova-Vision
+
+eval_datasets:
+  - Re10K
+  - CO3Dv2
+
+predict_results:
+  - ${varint.predict_root}/camera_pose/re10k/results.jsonl
+  - ${varint.predict_root}/camera_pose/co3dv2/results.jsonl
+
+pose_type: c2w  # poses in predict_results are "c2w" or "w2c"
+
+no_crop: False
+load_img_size: 512
+device: cuda
+verbose: False
+seed: 42
+save_suffix: null

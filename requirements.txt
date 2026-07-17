@@ -18,7 +18,6 @@ opencv_python==4.7.0.72
 packaging==25.0
 pandas==2.3.0
 Pillow==11.2.1
-projectaria-tools==1.2.0
 protobuf==6.31.0
 psutil==7.0.0
 pyarrow==11.0.0

@@ -1,0 +1,7 @@
+defaults:
+  - general: default
+  - data: depth
+  - evaluation: null
+  - override hydra/job_logging: custom
+  - override hydra/hydra_logging: colorlog
+  - _self_

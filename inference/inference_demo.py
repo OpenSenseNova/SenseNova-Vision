@@ -364,9 +364,11 @@ def make_output_context(output_dir: str, request: InferenceRequest) -> OutputCon
 
 
 def model_question(prompt: str, image_count: int) -> str:
-    if image_count <= 0:
+    existing_image_count = prompt.count("<image>")
+    missing_image_count = max(image_count - existing_image_count, 0)
+    if missing_image_count == 0:
         return prompt
-    return f'{("<image>" * image_count)} {prompt}'.strip()
+    return f'{("<image>" * missing_image_count)} {prompt}'.strip()
 
 
 def wrap_text(
@@ -767,6 +769,67 @@ class TaskRunner:
 
 
 class WebTaskRunner(TaskRunner):
+    @staticmethod
+    def _build_contents(image_paths: List[str], prompt: str) -> List[Dict[str, Any]]:
+        contents = [
+            {"type": "image", "value": image_path}
+            for image_path in image_paths
+        ]
+        contents.append({"type": "text", "value": prompt})
+        return contents
+
+    def run_generate(self, request: InferenceRequest, prompt: str) -> Dict:
+        params = dict(request.params or {})
+        seed = params.pop("seed", None)
+        if seed is not None:
+            set_seed(int(seed))
+        result = self.model.generate(
+            contents=self._build_contents(request.image_paths, prompt),
+            mode=request.mode,
+            return_intermediate_outputs=True,
+            **params,
+        )
+        if isinstance(result, dict):
+            return result
+        if isinstance(result, Image.Image):
+            return {"image": result, "text": None}
+        return {"image": None, "text": str(result) if result is not None else None}
+
+    def run_camera_pose(self, request: InferenceRequest, prompt: str) -> Dict:
+        if len(request.image_paths) < 2:
+            raise ValueError("camera_pose requires at least two multi-view images.")
+        if len(request.image_paths) > 10:
+            print("[Warn] camera_pose limits input to 10 frames.")
+            request = InferenceRequest(
+                image_paths=request.image_paths[:10],
+                task=request.task,
+                mode=request.mode,
+                query=request.query,
+                params=request.params,
+            )
+
+        params = dict(request.params or {})
+        seed = params.pop("seed", None)
+        if seed is not None:
+            set_seed(int(seed))
+        raw_text = self.model.generate(
+            contents=self._build_contents(request.image_paths, prompt),
+            mode=request.mode,
+            vit_transform=self.model.camera_vit_transform,
+            **params,
+        )
+        if raw_text is None:
+            raise RuntimeError("camera_pose did not return text output.")
+        raw_text = str(raw_text)
+        parsed_pose = resolve_pose_string(raw_text)
+        parsed_text = json.dumps(parsed_pose, indent=2) if parsed_pose is not None else "null"
+        return {
+            "image": None,
+            "text": f"{raw_text}\n\nParsed Pose:\n{parsed_text}",
+            "raw_text": raw_text,
+            "parsed_pose": parsed_pose,
+        }
+
     def run_web(
         self,
         request: InferenceRequest,
@@ -823,7 +886,7 @@ class WebTaskRunner(TaskRunner):
             saved_files.append(pose_path)
             raw_output_files.append(pose_path)
 
-        for key in ("raw_output", "glb_output"):
+        for key in ("raw_output",):
             if output.get(key):
                 output_path = str(output[key])
                 saved_files.append(output_path)

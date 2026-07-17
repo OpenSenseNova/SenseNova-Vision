@@ -710,11 +710,12 @@ class SenseNovaVisionModel:
 
     def generate(
         self,
-        question: str,
+        question: Optional[str] = None,
         images: Optional[list[str]] = None,
         mode: Optional[str] = None,
         noise_seed: Optional[int] = 42,
         return_intermediate_outputs: bool = False,
+        contents: Optional[list[Dict[str, Any]]] = None,
         **kwargs,
     ):
         """Run SenseNova-Vision inference.
@@ -730,6 +731,15 @@ class SenseNovaVisionModel:
                 List of image paths.
                 The number of image paths must match the number of `<image>`
                 placeholders in `question`.
+
+            contents:
+                Ordered multimodal inputs. Each item must be either
+                `{"type": "image", "value": image}` or
+                `{"type": "text", "value": text}`. Image values may be
+                paths or PIL images. Text values, including literal `<image>`
+                strings, are passed to the tokenizer without placeholder
+                parsing. `contents` is mutually exclusive with `question` and
+                `images` and is not supported for `recon3d` mode.
 
             mode:
                 Supported modes:
@@ -781,7 +791,20 @@ class SenseNovaVisionModel:
                 f"Supported modes: {list(BASE_PARAMS.keys())}"
             )
 
+        if contents is not None and (question is not None or images is not None):
+            raise ValueError(
+                "`contents` is mutually exclusive with `question` and `images`."
+            )
+
+        if contents is None and question is None:
+            raise ValueError("`question` is required when `contents` is not provided.")
+
         if mode in RECON3D_OUTPUT_MODES:
+            if contents is not None:
+                raise ValueError(
+                    "`contents` is not supported for recon3d mode; use "
+                    "`question` and `images`, or call `reconstruct_3d()` directly."
+                )
             params = dict(BASE_PARAMS[mode])
             params.update(kwargs)
             return self.reconstruct_3d(
@@ -791,34 +814,66 @@ class SenseNovaVisionModel:
                 **params,
             )
 
-        images = images or []
-        text_parts = question.split("<image>")
-
-        if len(text_parts) != len(images) + 1:
-            raise ValueError(
-                f"The number of `<image>` tokens must match the number of images. "
-                f"Got {len(text_parts) - 1} image tokens but {len(images)} images."
-            )
-
         input_lists = []
 
-        for i, part in enumerate(text_parts):
-            text = part.strip()
+        if contents is not None:
+            if not isinstance(contents, list):
+                raise TypeError("`contents` must be a list of content items.")
 
-            if text:
-                input_lists.append(text)
+            for index, item in enumerate(contents):
+                if not isinstance(item, dict):
+                    raise TypeError(f"`contents[{index}]` must be a dictionary.")
+                if "value" not in item:
+                    raise ValueError(f"`contents[{index}]` must contain a `value` field.")
 
-            if i < len(images):
-                img_path = images[i]
+                item_type = item.get("type")
+                value = item["value"]
+                if item_type == "text":
+                    if not isinstance(value, str):
+                        raise TypeError(f"`contents[{index}].value` must be text.")
+                    text = value.strip()
+                    if text:
+                        input_lists.append(text)
+                elif item_type == "image":
+                    try:
+                        image = value if isinstance(value, Image.Image) else Image.open(value)
+                        input_lists.append(image.convert("RGB"))
+                    except Exception as e:
+                        raise RuntimeError(
+                            f"Cannot load image from `contents[{index}]`: {e}"
+                        ) from e
+                else:
+                    raise ValueError(
+                        f"Unsupported `contents[{index}].type`: {item_type!r}. "
+                        "Expected `text` or `image`."
+                    )
+        else:
+            images = images or []
+            text_parts = question.split("<image>")
 
-                try:
-                    image = Image.open(img_path).convert("RGB")
-                    input_lists.append(image)
+            if len(text_parts) != len(images) + 1:
+                raise ValueError(
+                    f"The number of `<image>` tokens must match the number of images. "
+                    f"Got {len(text_parts) - 1} image tokens but {len(images)} images."
+                )
 
-                except Exception as e:
-                    raise RuntimeError(
-                        f"Cannot load image `{img_path}`: {e}"
-                    ) from e
+            for i, part in enumerate(text_parts):
+                text = part.strip()
+
+                if text:
+                    input_lists.append(text)
+
+                if i < len(images):
+                    img_path = images[i]
+
+                    try:
+                        image = Image.open(img_path).convert("RGB")
+                        input_lists.append(image)
+
+                    except Exception as e:
+                        raise RuntimeError(
+                            f"Cannot load image `{img_path}`: {e}"
+                        ) from e
 
         params = dict(BASE_PARAMS[mode])
         params.update(kwargs)

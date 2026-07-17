@@ -5,6 +5,7 @@ import json
 import math
 import os
 import re
+import tempfile
 import time
 from dataclasses import asdict
 from functools import lru_cache
@@ -20,68 +21,42 @@ if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
 
-def _patch_huggingface_hub_hffolder() -> None:
-    """Restore the legacy HfFolder symbol for older gradio/transformers builds."""
-    try:
-        import huggingface_hub
-    except ImportError:
-        return
-
-    if hasattr(huggingface_hub, "HfFolder"):
-        return
-
-    class HfFolder:
-        @staticmethod
-        def get_token() -> Optional[str]:
-            get_token = getattr(huggingface_hub, "get_token", None)
-            if callable(get_token):
-                return get_token()
-            return os.environ.get("HF_TOKEN") or os.environ.get("HUGGING_FACE_HUB_TOKEN")
-
-        @staticmethod
-        def save_token(token: str) -> None:
-            login = getattr(huggingface_hub, "login", None)
-            if callable(login):
-                login(token=token, add_to_git_credential=False)
-                return
-            raise RuntimeError("huggingface_hub.login is unavailable; cannot save token.")
-
-        @staticmethod
-        def delete_token() -> None:
-            logout = getattr(huggingface_hub, "logout", None)
-            if callable(logout):
-                logout()
-
-    huggingface_hub.HfFolder = HfFolder
-
-
-_patch_huggingface_hub_hffolder()
-
 import gradio as gr
-from PIL import Image, ImageOps
+from PIL import Image, ImageChops, ImageOps
 
 
-def _patch_gradio_client_bool_schema() -> None:
-    """Allow older gradio_client to parse JSON Schema boolean shortcuts."""
-    try:
-        import gradio_client.utils as client_utils
-    except ImportError:
-        return
+def __patch_gr_number():
+    """Patch gr.Number to give it a better exception message."""
 
-    original = getattr(client_utils, "_json_schema_to_python_type", None)
-    if not callable(original) or getattr(original, "_sensenova_bool_schema_patch", False):
-        return
+    original_preprocess = gr.Number.preprocess
 
-    def patched_json_schema_to_python_type(schema: Any, defs: Any) -> str:
-        if isinstance(schema, bool):
-            return "Any" if schema else "None"
-        return original(schema, defs)
+    def preprocess(self, payload: float | None) -> float | int | None:
+        if payload is None:
+            return None
+        name = (
+            getattr(self, "label", None)
+            or getattr(self, "elem_id", None)
+            or "Number"
+        )
+        if self.minimum is not None and payload < self.minimum:
+            raise gr.Error(
+                f"{name}: value {payload} is less than minimum value {self.minimum}."
+            )
+        elif self.maximum is not None and payload > self.maximum:
+            raise gr.Error(
+                f"{name}: value {payload} is greater than maximum value {self.maximum}."
+            )
+        try:
+            return self.round_to_precision(payload, self.precision)
+        except AttributeError:
+            try:
+                return self._round_to_precision(payload, self.precision)
+            except Exception:
+                return original_preprocess(self, payload)
 
-    patched_json_schema_to_python_type._sensenova_bool_schema_patch = True
-    client_utils._json_schema_to_python_type = patched_json_schema_to_python_type
+    gr.Number.preprocess = preprocess
 
-
-_patch_gradio_client_bool_schema()
+__patch_gr_number()
 
 
 APP_TITLE = "SenseNova-Vision"
@@ -290,6 +265,39 @@ DEMO_EXAMPLE_ROOT = os.environ.get(
     os.path.join(PROJECT_ROOT, "examples"),
 )
 DEMO_INFERENCE_EXAMPLE_ROOT = os.path.join(CURRENT_DIR, "examples")
+INTER_SEG_ACTION = "Inter Seg"
+INTER_SEG_PROMPT = (
+    "Could you provide segmentation masks for this image according to the "
+    "specified regions: <point>? Please respond with the segmentation masks."
+)
+INTER_SEG_MASK_DIR = os.path.join(tempfile.gettempdir(), "sensenova_vision_interseg")
+INTER_SEG_MASK_PREFIX = "sensenova_interseg_"
+VISUAL_PROMPT_DOWNLOAD_JS = """
+() => {
+    if (window.__sensenovaVisualPromptDownloadBound) {
+        return;
+    }
+    window.__sensenovaVisualPromptDownloadBound = true;
+    document.addEventListener("click", (event) => {
+        const target = event.target;
+        if (!(target instanceof Element)) {
+            return;
+        }
+        const visualPromptDownload = target.closest(
+            '#visual-prompt-editor button[aria-label="Download"]'
+        );
+        if (!visualPromptDownload) {
+            return;
+        }
+        const maskDownload = document.querySelector(
+            "#visual-prompt-mask-download"
+        );
+        if (maskDownload instanceof HTMLButtonElement && !maskDownload.disabled) {
+            maskDownload.click();
+        }
+    }, true);
+}
+"""
 
 TASK_ACTION_INFO: Dict[str, Dict[str, str]] = {
     "Binary seg (ref/reason/inter)": {
@@ -298,6 +306,13 @@ TASK_ACTION_INFO: Dict[str, Dict[str, str]] = {
         "mode": "dense_perception",
         "sample_class": "dense_prediction",
         "placeholder": "person",
+    },
+    INTER_SEG_ACTION: {
+        "label": INTER_SEG_ACTION,
+        "task": "binary_seg",
+        "mode": "dense_perception",
+        "sample_class": "dense_prediction",
+        "placeholder": INTER_SEG_PROMPT,
     },
     "depth": {
         "label": "Depth",
@@ -402,6 +417,7 @@ GALLERY_LABELS: Dict[str, str] = {
     "depth": "Depth",
     "normal": "Normal",
     "Binary seg (ref/reason/inter)": "Binary Seg",
+    INTER_SEG_ACTION: INTER_SEG_ACTION,
     "Pan seg": "Panoptic Seg",
     "GCG Seg": "GCG Seg",
     "Bbox detection": "Bbox Det",
@@ -419,6 +435,7 @@ OUTPUT_TYPE_BY_ACTION: Dict[str, str] = {
     "depth": "image",
     "normal": "image",
     "Binary seg (ref/reason/inter)": "image",
+    INTER_SEG_ACTION: "image",
     "Pan seg": "text+image",
     "GCG Seg": "text+image",
     "Open generate": "image",
@@ -434,7 +451,7 @@ OUTPUT_TYPE_BY_ACTION: Dict[str, str] = {
 
 TASK_ACTION_GROUPS = (
     ("Bbox detection", "Point detection", "OCR (word/text line)", "keypoint"),
-    ("Binary seg (ref/reason/inter)", "GCG Seg", "Pan seg"),
+    ("Binary seg (ref/reason/inter)", INTER_SEG_ACTION, "GCG Seg", "Pan seg"),
     ("depth", "normal"),
     ("3D reconstruction", "Camera pose"),
     ("Open generate", "Open edit", "Open understanding"),
@@ -448,6 +465,8 @@ TASK_ACTION_ALIASES = {
     "binary seg": "Binary seg (ref/reason/inter)",
     "binary segmentation": "Binary seg (ref/reason/inter)",
     "binary seg (ref/reason/inter)": "Binary seg (ref/reason/inter)",
+    "inter seg": INTER_SEG_ACTION,
+    "interseg": INTER_SEG_ACTION,
     "depth": "depth",
     "normal": "normal",
     "pan seg": "Pan seg",
@@ -481,7 +500,7 @@ TASK_ACTION_ALIASES = {
 TASK_TO_ACTION = {
     info["task"]: action
     for action, info in TASK_ACTION_INFO.items()
-    if info["task"] != "raw_query"
+    if info["task"] != "raw_query" and action != INTER_SEG_ACTION
 }
 MODE_TO_ACTION = {
     "generate": "Open generate",
@@ -630,6 +649,13 @@ DEMO_CASE_SPECS: List[Dict[str, Any]] = [
         "action": "Binary seg (ref/reason/inter)",
     },
     {
+        "case_dir": "binary_seg",
+        "action": INTER_SEG_ACTION,
+        "display_prompt": INTER_SEG_PROMPT,
+        "use_gt": False,
+        "show_output_preview": False,
+    },
+    {
         "case_dir": "pan_val",
         "action": "Pan seg",
         "display_prompt": PAN_SEG_COCO_DEMO_PROMPT,
@@ -652,8 +678,16 @@ DEMO_CASE_SPECS: List[Dict[str, Any]] = [
         "action": "OCR (word/text line)",
     },
     {
-        "case_dir": "keypoint",
+        "case_dir": "keypoint/person",
         "action": "keypoint",
+        "label": "Keypoint Person",
+        "gallery_label": "Keypoint · Person",
+    },
+    {
+        "case_dir": "keypoint/animal",
+        "action": "keypoint",
+        "label": "Keypoint Animal",
+        "gallery_label": "Keypoint · Animal",
         "display_prompt": KEYPOINT_ANTELOPE_DEMO_PROMPT,
     },
     {
@@ -762,6 +796,31 @@ def _image_collection_to_paths(value: Any) -> List[str]:
     return deduped_paths
 
 
+def _is_inter_seg_mask_path(path: str) -> bool:
+    file_name = os.path.basename(str(path or ""))
+    return file_name.startswith(INTER_SEG_MASK_PREFIX) and file_name.endswith(".png")
+
+
+def _source_image_paths(value: Any) -> List[str]:
+    return [path for path in _image_collection_to_paths(value) if not _is_inter_seg_mask_path(path)]
+
+
+def _remove_inter_seg_mask_files(value: Any) -> None:
+    for path in _image_collection_to_paths(value):
+        if not _is_inter_seg_mask_path(path):
+            continue
+        try:
+            os.remove(path)
+        except FileNotFoundError:
+            pass
+
+
+def _inter_seg_mask_path(request: gr.Request) -> str:
+    session_hash = str(getattr(request, "session_hash", "") or os.getpid())
+    safe_session_hash = re.sub(r"[^A-Za-z0-9_.-]+", "_", session_hash)
+    return os.path.join(INTER_SEG_MASK_DIR, f"{INTER_SEG_MASK_PREFIX}{safe_session_hash}.png")
+
+
 def normalize_task_action(task_action: str) -> str:
     action = str(task_action or "").strip()
     return TASK_ACTION_ALIASES.get(action.lower(), action) if action else "Open understanding"
@@ -867,7 +926,7 @@ def _read_int_param(param_name: str, value: Any, errors: List[str]) -> Optional[
 
 def _raise_param_validation_errors(errors: List[str]) -> None:
     if errors:
-        raise ValueError("Invalid parameter value:\n" + "\n".join(errors))
+        raise gr.Error("Invalid parameter value:\n" + "\n".join(errors))
 
 
 def params_from_base_param_controls(
@@ -971,11 +1030,17 @@ def _collect_image_paths(
     if not paths and allow_empty:
         return []
     if not paths:
-        raise ValueError("Please upload at least one image.")
+        raise gr.Error("Please upload at least one image.")
+
+    if len(paths) > MAX_INPUT_IMAGES:
+        raise gr.Error(
+            f"You can upload at most {MAX_INPUT_IMAGES} images. "
+            f"Received {len(paths)} images."
+        )
 
     missing = [path for path in paths if not os.path.isfile(path)]
     if missing:
-        raise FileNotFoundError(f"Image not found: {missing[0]}")
+        raise gr.Error(f"Image not found: {missing[0]}")
 
     return paths
 
@@ -1087,13 +1152,6 @@ def _demo_query_from_label(action: str, label: Dict[str, Any]) -> str:
     return prompt or info["placeholder"]
 
 
-def _request_query_from_prompt(task: str, prompt_or_query: str) -> str:
-    text = str(prompt_or_query or "").strip()
-    if task in CATEGORY_QUERY_TASKS and "<p>" in text.lower() and "</p>" in text.lower():
-        return _extract_prompt_categories(text) or text
-    return text
-
-
 def _format_display_categories(query: str) -> str:
     text = str(query or "").strip()
     if "<p>" in text.lower() and "</p>" in text.lower():
@@ -1158,11 +1216,13 @@ def _load_demo_cases() -> List[Dict[str, Any]]:
         )
         if multi_images:
             image_path = multi_images[0]
-        gt_path = _localize_demo_path(
-            case_dir,
-            str(label.get("output") or ""),
-            ["gt.png", "gt.jpg", "gt.jpeg", "gt.webp"],
-        )
+        gt_path = ""
+        if spec.get("use_gt", True):
+            gt_path = _localize_demo_path(
+                case_dir,
+                str(label.get("output") or ""),
+                ["gt.png", "gt.jpg", "gt.jpeg", "gt.webp"],
+            )
         gt_model3d_path = _demo_model3d_path(case_dir) if task == "recon3d" else ""
         gt_text_path = _first_demo_file_with_ext(case_dir, (".json", ".txt")) if task == "camera_pose" else ""
         query = _demo_query_from_label(action, label)
@@ -1172,8 +1232,11 @@ def _load_demo_cases() -> List[Dict[str, Any]]:
 
         cases.append(
             {
-                "label": TASK_ACTION_INFO[action]["label"],
-                "gallery_label": GALLERY_LABELS.get(action, TASK_ACTION_INFO[action]["label"]),
+                "label": str(spec.get("label") or TASK_ACTION_INFO[action]["label"]),
+                "gallery_label": str(
+                    spec.get("gallery_label")
+                    or GALLERY_LABELS.get(action, TASK_ACTION_INFO[action]["label"])
+                ),
                 "output_type": output_type_for_action(action),
                 "action": action,
                 "image": image_path,
@@ -1181,6 +1244,7 @@ def _load_demo_cases() -> List[Dict[str, Any]]:
                 "gt": gt_path,
                 "gt_model3d": gt_model3d_path,
                 "gt_text": gt_text_path,
+                "show_output_preview": bool(spec.get("show_output_preview", True)),
                 "task": task,
                 "mode": mode,
                 "query": query,
@@ -1263,14 +1327,13 @@ def _raw_output_files_for_display(paths: List[str], task: str) -> Tuple[List[str
     return existing_paths, [path for path in existing_paths if _is_raw_image_path(path)]
 
 
-def update_raw_output_display(metadata_json: str) -> Tuple[Any, Any]:
+def update_raw_output_display(metadata_json: str, raw_output_files: List[str]) -> Tuple[Any, Any]:
     try:
         metadata = json.loads(str(metadata_json or "{}"))
     except json.JSONDecodeError:
         metadata = {}
     request = metadata.get("request") if isinstance(metadata.get("request"), dict) else {}
     task = str(request.get("task") or metadata.get("task") or "")
-    raw_output_files = metadata.get("raw_output_files") or []
     if not isinstance(raw_output_files, list):
         raw_output_files = []
     downloadable_files, raw_image_files = _raw_output_files_for_display(raw_output_files, task)
@@ -1340,29 +1403,109 @@ def _input_image_slot_updates(paths: Any) -> List[Any]:
     return updates
 
 
-def append_input_images(current_images: Any, uploaded_files: Any) -> Tuple[Any, ...]:
-    image_paths = _image_collection_to_paths(current_images)
-    image_paths.extend(_image_collection_to_paths(uploaded_files))
-    image_paths = _image_collection_to_paths(image_paths)[:MAX_INPUT_IMAGES]
+def append_input_images(
+    current_images: Any,
+    uploaded_files: Any,
+    task_action: str = "",
+) -> Tuple[Any, ...]:
+    current_paths = _source_image_paths(current_images)
+    uploaded_paths = _image_collection_to_paths(uploaded_files)
+    if normalize_task_action(task_action) == INTER_SEG_ACTION:
+        if len(uploaded_paths) > 1:
+            raise gr.Error("Inter Seg accepts exactly one source image.")
+        _remove_inter_seg_mask_files(current_images)
+        image_paths = uploaded_paths or current_paths[:1]
+    else:
+        image_paths = current_paths + uploaded_paths
+        task, _ = action_to_task_mode(task_action)
+        if task not in MULTI_IMAGE_TASKS and len(image_paths) > 1:
+            raise gr.Error("This task accepts only one input image.")
+    image_paths = _collect_image_paths(image_paths)
     return (image_paths, *_input_image_slot_updates(image_paths), gr.update(value=None))
 
 
 def delete_input_image(current_images: Any, delete_index: Any) -> Tuple[Any, ...]:
-    image_paths = _image_collection_to_paths(current_images)
+    image_paths = _source_image_paths(current_images)
+    _remove_inter_seg_mask_files(current_images)
     index = int(delete_index)
     if 0 <= index < len(image_paths):
         image_paths.pop(index)
     return (image_paths, *_input_image_slot_updates(image_paths))
 
 
-def _read_text_preview(path: str) -> str:
-    if not path or not os.path.isfile(path):
-        return ""
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            return f.read()
-    except OSError:
-        return ""
+def update_visual_prompt_render_state(
+    input_images: Any,
+    task_action: str,
+    render_state: Any,
+    request: gr.Request,
+) -> Dict[str, Any]:
+    _remove_inter_seg_mask_files(input_images)
+    _remove_inter_seg_mask_files([_inter_seg_mask_path(request)])
+    previous_revision = int((render_state or {}).get("revision", 0))
+    action = normalize_task_action(task_action)
+    source_paths = _source_image_paths(input_images)
+    source_path = source_paths[0] if action == INTER_SEG_ACTION and source_paths else ""
+    return {
+        "source_path": source_path,
+        "task_action": action,
+        "revision": previous_revision + 1,
+    }
+
+
+def _visual_prompt_mask(editor_data: Any, image_size: Tuple[int, int]) -> Optional[Image.Image]:
+    if not isinstance(editor_data, dict) or editor_data.get("background") is None:
+        return None
+
+    mask = Image.new("L", image_size, 0)
+    for layer in editor_data.get("layers") or []:
+        if not isinstance(layer, Image.Image) or "A" not in layer.getbands():
+            continue
+        alpha = layer.getchannel("A")
+        if alpha.size != image_size:
+            alpha = alpha.resize(image_size, resample=Image.Resampling.NEAREST)
+        mask = ImageChops.lighter(mask, alpha)
+
+    mask = mask.point(lambda value: 255 if value > 0 else 0, mode="L")
+    return mask if mask.getbbox() is not None else None
+
+
+def update_inter_seg_input_paths(
+    editor_data: Any,
+    input_images: Any,
+    task_action: str,
+    request: gr.Request,
+) -> List[str]:
+    source_paths = _source_image_paths(input_images)[:1]
+    if normalize_task_action(task_action) != INTER_SEG_ACTION or not source_paths:
+        _remove_inter_seg_mask_files(input_images)
+        return source_paths
+
+    with Image.open(source_paths[0]) as source_image:
+        mask = _visual_prompt_mask(editor_data, source_image.size)
+    mask_path = _inter_seg_mask_path(request)
+    if mask is None:
+        _remove_inter_seg_mask_files([mask_path])
+        return source_paths
+
+    os.makedirs(INTER_SEG_MASK_DIR, exist_ok=True)
+    mask.convert("RGB").save(mask_path, format="PNG")
+    return [source_paths[0], mask_path]
+
+
+def inter_seg_mask_download_file(input_images: Any) -> Optional[str]:
+    for path in _image_collection_to_paths(input_images):
+        if _is_inter_seg_mask_path(path) and os.path.isfile(path):
+            return path
+    return None
+
+
+def clear_inter_seg_mask_download(
+    input_images: Any,
+    request: gr.Request,
+) -> Tuple[List[str], None]:
+    _remove_inter_seg_mask_files(input_images)
+    _remove_inter_seg_mask_files([_inter_seg_mask_path(request)])
+    return (_source_image_paths(input_images)[:1], None)
 
 
 def predict(
@@ -1397,10 +1540,11 @@ def predict(
         input_images,
         allow_empty=allow_empty_images,
     )
-    if task not in MULTI_IMAGE_TASKS and len(image_paths) > 1:
-        image_paths = image_paths[:1]
 
-    prompt = str(query or "").strip()
+    if action == INTER_SEG_ACTION and len(image_paths) != 2:
+        raise gr.Error("Please draw on the target object first.")
+
+    prompt = INTER_SEG_PROMPT if action == INTER_SEG_ACTION else str(query or "").strip()
     request = backend.InferenceRequest(
         image_paths=image_paths,
         task=task,
@@ -1463,7 +1607,13 @@ def _validate_run_inputs(
 ) -> None:
     action = normalize_task_action(task_action)
     allow_empty_images = TASK_ACTION_INFO[action]["sample_class"] == "generate"
-    _collect_image_paths(input_images, allow_empty=allow_empty_images)
+    image_paths = _collect_image_paths(input_images, allow_empty=allow_empty_images)
+    if action == INTER_SEG_ACTION:
+        if len(image_paths) != 2:
+            raise gr.Error("Please draw on the target object first.")
+        with Image.open(image_paths[1]) as mask_image:
+            if mask_image.convert("L").getbbox() is None:
+                raise gr.Error("Please draw on the target object first.")
     params_from_base_param_controls(
         action,
         cfg_text_scale,
@@ -1476,37 +1626,6 @@ def _validate_run_inputs(
         max_length_token,
         seed,
     )
-
-
-def validate_params_for_error(
-    task_action: str,
-    cfg_text_scale: Any,
-    cfg_img_scale: Any,
-    cfg_interval_start: Any,
-    cfg_interval_end: Any,
-    timestep_shift: Any,
-    num_timesteps: Any,
-    cfg_renorm_min: Any,
-    max_length_token: Any,
-    seed: Any,
-) -> None:
-    try:
-        params_from_base_param_controls(
-            task_action,
-            cfg_text_scale,
-            cfg_img_scale,
-            cfg_interval_start,
-            cfg_interval_end,
-            timestep_shift,
-            num_timesteps,
-            cfg_renorm_min,
-            max_length_token,
-            seed,
-        )
-    except gr.Error:
-        raise
-    except Exception as exc:
-        _raise_gradio_error(exc)
 
 
 def run_with_validation(
@@ -1683,14 +1802,22 @@ def load_demo_case(label: str) -> Tuple[Any, ...]:
             _safe_json({"error": f"Demo case not found: {label}"}),
         )
 
-    preview = _load_input_image(case["gt"]) if case.get("gt") and os.path.isfile(case["gt"]) else None
-    if preview is None:
+    show_output_preview = bool(case.get("show_output_preview", True))
+    preview = (
+        _load_input_image(case["gt"])
+        if show_output_preview and case.get("gt") and os.path.isfile(case["gt"])
+        else None
+    )
+    if show_output_preview and preview is None:
         preview = _make_multiview_preview(list(case.get("images") or []))
     is_recon3d = case["task"] == "recon3d"
-    gt_model3d = "" if is_recon3d else str(case.get("gt_model3d") or "")
+    gt_model3d = str(case.get("gt_model3d") or "") if is_recon3d else ""
     gt_downloads = [path for path in [gt_model3d, str(case.get("gt_text") or "")] if path and os.path.isfile(path)]
     input_image_paths = list(case.get("images") or ([case["image"]] if case.get("image") else []))
-    display_prompt = str(case.get("display_prompt") or "") or _display_prompt_for_task(case["task"], case["query"])
+    display_prompt = str(case.get("display_prompt") or "")
+    if not display_prompt and case["task"] == "keypoint":
+        display_prompt = str(case.get("source_prompt") or "")
+    display_prompt = display_prompt or _display_prompt_for_task(case["task"], case["query"])
     return (
         input_image_paths,
         *_input_image_slot_updates(input_image_paths),
@@ -2343,9 +2470,9 @@ def build_demo() -> gr.Blocks:
         box-shadow: none !important;
     }
     .task-pills label:nth-of-type(5),
-    .task-pills label:nth-of-type(8),
-    .task-pills label:nth-of-type(10),
-    .task-pills label:nth-of-type(12) {
+    .task-pills label:nth-of-type(9),
+    .task-pills label:nth-of-type(11),
+    .task-pills label:nth-of-type(13) {
         grid-column: 1 !important;
     }
     .task-pills label:nth-of-type(n + 5) {
@@ -2353,9 +2480,9 @@ def build_demo() -> gr.Blocks:
     }
     .task-pills label:nth-of-type(1)::before,
     .task-pills label:nth-of-type(5)::before,
-    .task-pills label:nth-of-type(8)::before,
-    .task-pills label:nth-of-type(10)::before,
-    .task-pills label:nth-of-type(12)::before {
+    .task-pills label:nth-of-type(9)::before,
+    .task-pills label:nth-of-type(11)::before,
+    .task-pills label:nth-of-type(13)::before {
         position: absolute !important;
         left: -124px !important;
         top: 50% !important;
@@ -2375,19 +2502,19 @@ def build_demo() -> gr.Blocks:
     .task-pills label:nth-of-type(5)::before {
         content: "Segmentation" !important;
     }
-    .task-pills label:nth-of-type(8)::before {
+    .task-pills label:nth-of-type(9)::before {
         content: "Geometry" !important;
     }
-    .task-pills label:nth-of-type(10)::before {
+    .task-pills label:nth-of-type(11)::before {
         content: "Multi View" !important;
     }
-    .task-pills label:nth-of-type(12)::before {
+    .task-pills label:nth-of-type(13)::before {
         content: "General" !important;
     }
     .task-pills label:nth-of-type(5)::after,
-    .task-pills label:nth-of-type(8)::after,
-    .task-pills label:nth-of-type(10)::after,
-    .task-pills label:nth-of-type(12)::after {
+    .task-pills label:nth-of-type(9)::after,
+    .task-pills label:nth-of-type(11)::after,
+    .task-pills label:nth-of-type(13)::after {
         content: "" !important;
         position: absolute !important;
         left: -124px !important;
@@ -2805,17 +2932,17 @@ def build_demo() -> gr.Blocks:
         }
         .task-pills label:nth-of-type(1),
         .task-pills label:nth-of-type(5),
-        .task-pills label:nth-of-type(8),
-        .task-pills label:nth-of-type(10),
-        .task-pills label:nth-of-type(12) {
+        .task-pills label:nth-of-type(9),
+        .task-pills label:nth-of-type(11),
+        .task-pills label:nth-of-type(13) {
             margin-left: 0 !important;
             margin-top: 18px !important;
         }
         .task-pills label:nth-of-type(1)::before,
         .task-pills label:nth-of-type(5)::before,
-        .task-pills label:nth-of-type(8)::before,
-        .task-pills label:nth-of-type(10)::before,
-        .task-pills label:nth-of-type(12)::before {
+        .task-pills label:nth-of-type(9)::before,
+        .task-pills label:nth-of-type(11)::before,
+        .task-pills label:nth-of-type(13)::before {
             left: 0 !important;
             right: auto !important;
             top: -13px !important;
@@ -2824,9 +2951,9 @@ def build_demo() -> gr.Blocks:
             text-align: left !important;
         }
         .task-pills label:nth-of-type(5)::after,
-        .task-pills label:nth-of-type(8)::after,
-        .task-pills label:nth-of-type(10)::after,
-        .task-pills label:nth-of-type(12)::after {
+        .task-pills label:nth-of-type(9)::after,
+        .task-pills label:nth-of-type(11)::after,
+        .task-pills label:nth-of-type(13)::after {
             left: 0 !important;
             width: calc(200% + 8px) !important;
         }
@@ -2837,11 +2964,12 @@ def build_demo() -> gr.Blocks:
     }
     """
     initial_case: Dict[str, Any] = {}
-    initial_action = "Open understanding"
-    initial_task = "raw_query"
-    initial_mode = "understanding"
+    initial_action = "Bbox detection"
+    initial_task, initial_mode = action_to_task_mode(initial_action)
     initial_images: List[str] = []
-    initial_prompt = ""
+    initial_prompt = _display_prompt_for_task(
+        initial_task, TASK_ACTION_INFO[initial_action]["placeholder"]
+    )
     initial_params = base_params_for_action(initial_action)
     initial_param_values = _control_values_from_params(initial_params)
     initial_param_visible = set(initial_params)
@@ -2938,6 +3066,67 @@ def build_demo() -> gr.Blocks:
                                     type="filepath",
                                     elem_classes=["append-image-upload"],
                                 )
+                        visual_prompt_render_state = gr.State(
+                            {"source_path": "", "task_action": "", "revision": 0}
+                        )
+
+                        @gr.render(
+                            inputs=visual_prompt_render_state,
+                            triggers=[visual_prompt_render_state.change],
+                            queue=False,
+                            show_progress="hidden",
+                        )
+                        def render_visual_prompt(render_state: Any) -> None:
+                            state = render_state or {}
+                            source_path = str(state.get("source_path") or "")
+                            if (
+                                state.get("task_action") != INTER_SEG_ACTION
+                                or not source_path
+                                or not os.path.isfile(source_path)
+                            ):
+                                return
+
+                            background = _load_input_image(source_path).convert("RGBA")
+                            visual_prompt = gr.ImageEditor(
+                                value={
+                                    "background": background,
+                                    "layers": [],
+                                    "composite": background,
+                                },
+                                type="pil",
+                                label="Visual Prompt",
+                                elem_id="visual-prompt-editor",
+                                brush=gr.Brush(
+                                    colors=["#FF0000"],
+                                    default_color="#FF0000",
+                                    default_size=8,
+                                ),
+                                eraser=gr.Eraser(default_size=8),
+                                layers=False,
+                                interactive=True,
+                                height=360,
+                                key=f"visual-prompt-{int(state.get('revision', 0))}",
+                                preserved_by_key=[],
+                            )
+                            visual_prompt_mask_download = gr.DownloadButton(
+                                label="Download mask",
+                                value=None,
+                                elem_id="visual-prompt-mask-download",
+                            )
+                            visual_prompt.change(
+                                fn=update_inter_seg_input_paths,
+                                inputs=[visual_prompt, input_image_paths, task_action],
+                                outputs=input_image_paths,
+                            ).then(
+                                fn=inter_seg_mask_download_file,
+                                inputs=input_image_paths,
+                                outputs=visual_prompt_mask_download,
+                            )
+                            visual_prompt.clear(
+                                fn=clear_inter_seg_mask_download,
+                                inputs=input_image_paths,
+                                outputs=[input_image_paths, visual_prompt_mask_download],
+                            )
                         query = gr.Textbox(
                             label="Prompt / Query",
                             lines=4,
@@ -2955,46 +3144,64 @@ def build_demo() -> gr.Blocks:
                                         label="cfg_text_scale",
                                         value=initial_param_values["cfg_text_scale"],
                                         visible="cfg_text_scale" in initial_param_visible,
+                                        minimum=1.0,
+                                        step=0.5,
                                     )
                                     cfg_img_scale = gr.Number(
                                         label="cfg_img_scale",
                                         value=initial_param_values["cfg_img_scale"],
                                         visible="cfg_img_scale" in initial_param_visible,
+                                        minimum=1.0,
+                                        step=0.5,
                                     )
                                 with gr.Row(elem_classes=["base-param-grid"]):
                                     cfg_interval_start = gr.Number(
                                         label="cfg_interval start",
                                         value=initial_param_values["cfg_interval_start"],
                                         visible="cfg_interval_start" in initial_param_visible,
+                                        minimum=0.0,
+                                        maximum=1.0,
+                                        step=0.1,
                                     )
                                     cfg_interval_end = gr.Number(
                                         label="cfg_interval end",
                                         value=initial_param_values["cfg_interval_end"],
                                         visible="cfg_interval_end" in initial_param_visible,
+                                        minimum=0.0,
+                                        maximum=1.0,
+                                        step=0.1,
                                     )
                                 with gr.Row(elem_classes=["base-param-grid"]):
                                     timestep_shift = gr.Number(
                                         label="timestep_shift",
                                         value=initial_param_values["timestep_shift"],
                                         visible="timestep_shift" in initial_param_visible,
+                                        minimum=0.5,
+                                        step=0.5,
                                     )
                                     num_timesteps = gr.Number(
                                         label="num_timesteps",
                                         value=initial_param_values["num_timesteps"],
                                         precision=0,
                                         visible="num_timesteps" in initial_param_visible,
+                                        minimum=1,
+                                        maximum=50,
                                     )
                                 with gr.Row(elem_classes=["base-param-grid"]):
                                     cfg_renorm_min = gr.Number(
                                         label="cfg_renorm_min",
                                         value=initial_param_values["cfg_renorm_min"],
                                         visible="cfg_renorm_min" in initial_param_visible,
+                                        minimum=0.0,
+                                        maximum=1.0,
+                                        step=0.1,
                                     )
                                     max_length_token = gr.Number(
                                         label="max_length_token",
                                         value=initial_param_values["max_length_token"],
                                         precision=0,
                                         visible="max_length_token" in initial_param_visible,
+                                        maximum=20000,
                                     )
                                 with gr.Row(elem_classes=["base-param-grid"]):
                                     seed = gr.Number(
@@ -3033,7 +3240,7 @@ def build_demo() -> gr.Blocks:
                             result_model3d = gr.Model3D(
                                 label="3D Reconstruction Preview",
                                 height=360,
-                                visible=False,
+                                visible=True,
                             )
                         with gr.Column(elem_classes=["output-card"]):
                             result_text = gr.Textbox(
@@ -3047,6 +3254,7 @@ def build_demo() -> gr.Blocks:
                                 file_count="multiple",
                                 type="filepath",
                                 visible=True,
+                                interactive=False,
                                 elem_classes=["raw-output-download"],
                             )
                             result_raw_images = gr.Gallery(
@@ -3084,31 +3292,8 @@ def build_demo() -> gr.Blocks:
                     elem_classes=["sample-gallery"],
                 )
 
-            demo_select_event = demo_gallery.select(
-                fn=load_demo_case_from_gallery,
-                inputs=[],
-                outputs=[
-                    input_image_paths,
-                    *input_slot_outputs,
-                    task_action,
-                    task,
-                    mode,
-                    query,
-                    *base_param_outputs,
-                    result_image,
-                    result_text,
-                    result_files,
-                    result_model3d,
-                    metadata,
-                    current_sample,
-                ],
-            )
-            demo_select_event.then(
-                fn=clear_raw_image_output,
-                inputs=[],
-                outputs=result_raw_images,
-            )
-            task_change_event = task_action.change(
+            demo.load(fn=None, js=VISUAL_PROMPT_DOWNLOAD_JS)
+            demo.load(
                 fn=load_task_action_sample,
                 inputs=task_action,
                 outputs=[
@@ -3126,30 +3311,83 @@ def build_demo() -> gr.Blocks:
                     metadata,
                     current_sample,
                 ],
+            ).then(
+                fn=update_visual_prompt_render_state,
+                inputs=[input_image_paths, task_action, visual_prompt_render_state],
+                outputs=visual_prompt_render_state,
             )
-            task_change_event.then(
+            demo_gallery.select(
+                fn=load_demo_case_from_gallery,
+                outputs=[
+                    input_image_paths,
+                    *input_slot_outputs,
+                    task_action,
+                    task,
+                    mode,
+                    query,
+                    *base_param_outputs,
+                    result_image,
+                    result_text,
+                    result_files,
+                    result_model3d,
+                    metadata,
+                    current_sample,
+                ],
+            ).then(
                 fn=clear_raw_image_output,
-                inputs=[],
                 outputs=result_raw_images,
+            ).then(
+                fn=update_visual_prompt_render_state,
+                inputs=[input_image_paths, task_action, visual_prompt_render_state],
+                outputs=visual_prompt_render_state,
             )
-            upload_event = append_images.upload if hasattr(append_images, "upload") else append_images.change
-            upload_event(
+            task_action.input(
+                fn=load_task_action_sample,
+                inputs=task_action,
+                outputs=[
+                    input_image_paths,
+                    *input_slot_outputs,
+                    task_action,
+                    task,
+                    mode,
+                    query,
+                    *base_param_outputs,
+                    result_image,
+                    result_text,
+                    result_files,
+                    result_model3d,
+                    metadata,
+                    current_sample,
+                ],
+            ).then(
+                fn=clear_raw_image_output,
+                outputs=result_raw_images,
+            ).then(
+                fn=update_visual_prompt_render_state,
+                inputs=[input_image_paths, task_action, visual_prompt_render_state],
+                outputs=visual_prompt_render_state,
+            )
+            upload_event_maker = append_images.upload if hasattr(append_images, "upload") else append_images.change
+            upload_event_maker(
                 fn=append_input_images,
-                inputs=[input_image_paths, append_images],
+                inputs=[input_image_paths, append_images, task_action],
                 outputs=[input_image_paths, *input_slot_outputs, append_images],
+            ).then(
+                fn=update_visual_prompt_render_state,
+                inputs=[input_image_paths, task_action, visual_prompt_render_state],
+                outputs=visual_prompt_render_state,
             )
-            for param_control in base_param_outputs:
-                param_control.change(
-                    fn=validate_params_for_error,
-                    inputs=[task_action, *base_param_outputs],
-                )
             for delete_button, delete_index in delete_buttons:
                 delete_button.click(
                     fn=lambda paths, idx=delete_index: delete_input_image(paths, idx),
                     inputs=input_image_paths,
                     outputs=[input_image_paths, *input_slot_outputs],
+                ).then(
+                    fn=update_visual_prompt_render_state,
+                    inputs=[input_image_paths, task_action, visual_prompt_render_state],
+                    outputs=visual_prompt_render_state,
                 )
-            run_event = run_btn.click(
+            run_btn.click(
                 fn=run_with_validation,
                 inputs=[
                     input_image_paths,
@@ -3167,12 +3405,12 @@ def build_demo() -> gr.Blocks:
                     metadata,
                 ],
                 api_name="predict",
-            )
-            run_event.success(
+            ).success(
                 fn=update_raw_output_display,
-                inputs=metadata,
+                inputs=[metadata, result_files],
                 outputs=[result_files, result_raw_images],
             )
+
     return demo
 
 

@@ -38,7 +38,7 @@ torchrun \
   --finetune-from-ema True \
   --log_every 1 \
   --save_every 100000 \
-  --total_steps 2000 \
+  --total_steps "${SENSENOVA_TEST_TOTAL_STEPS:-2000}" \
   --lr 2e-5 \
   --max_num_tokens 36864 \
   --expected_num_tokens 32768 \

@@ -8,7 +8,13 @@ import cv2
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
-from .colormap import build_palette, color_for_label, color_for_segment
+from .colormap import (
+    build_keypoint_palette,
+    build_palette,
+    color_for_instance,
+    color_for_label,
+    color_for_segment,
+)
 from .mask import decode_rle, mask_boundary, rgb2id, thicken_mask
 from .parsing_output import (
     gcg_prediction_from_raw_output,
@@ -60,7 +66,7 @@ def load_font(size: int = 14, bold: bool = False):
     for path in candidates:
         if os.path.exists(path):
             return ImageFont.truetype(path, size=size)
-    return ImageFont.load_default()
+    return ImageFont.load_default(size=size)
 
 
 def xsam_default_font_size(width: int, height: int) -> int:
@@ -692,8 +698,11 @@ _DETECTION_LABEL_BOX_WIDTH_RATIO = 1.2
 PERSON_SKELETON_CONNECTIONS = [
     ("nose", "left eye"),
     ("nose", "right eye"),
+    ("left eye", "right eye"),
     ("left eye", "left ear"),
     ("right eye", "right ear"),
+    ("left ear", "left shoulder"),
+    ("right ear", "right shoulder"),
     ("left shoulder", "right shoulder"),
     ("left shoulder", "left elbow"),
     ("right shoulder", "right elbow"),
@@ -755,7 +764,7 @@ ANIMAL_SKELETON_CONNECTIONS = [
 def detection_font_size(width: int, height: int, config: VisualizationConfig) -> int:
     if config.font_size and config.font_size > 0:
         return config.font_size
-    return max(9, int(round(min(width, height) / 48)))
+    return max(9, min(16, int(round(min(width, height) / 48))))
 
 
 def draw_bbox(draw, bbox, color, width: int):
@@ -775,6 +784,16 @@ def draw_point(draw, point, color, radius: int):
         fill=tuple(color) + (170,),
         outline=tuple(color) + (255,),
         width=max(1, radius // 3),
+    )
+
+
+def draw_keypoint(draw, point, color, radius: int, outline_width: int):
+    x, y = [int(round(value)) for value in point]
+    draw.ellipse(
+        (x - radius, y - radius, x + radius, y + radius),
+        fill=tuple(color) + (255,),
+        outline=(255, 255, 255, 255),
+        width=max(1, outline_width),
     )
 
 
@@ -860,19 +879,22 @@ def draw_keypoint_skeleton(draw, primitive, width: int):
             )
 
 
-def keypoint_radius_for_primitive(
-    primitive, image_size, config: VisualizationConfig, fallback_radius: int
-) -> int:
+def keypoint_bbox_width(image_size, config: VisualizationConfig) -> int:
+    if config.draw_width and config.draw_width > 0:
+        return config.draw_width
+    return max(2, int(min(image_size) * 0.0035))
+
+
+def keypoint_skeleton_width(image_size, config: VisualizationConfig) -> int:
+    if config.draw_width and config.draw_width > 0:
+        return config.draw_width
+    return max(2, keypoint_bbox_width(image_size, config) - 1)
+
+
+def keypoint_radius_for_image(image_size, config: VisualizationConfig) -> int:
     if config.keypoint_radius and config.keypoint_radius > 0:
         return config.keypoint_radius
-    bbox = primitive.get("bbox")
-    if bbox:
-        x0, y0, x1, y1 = bbox
-        bbox_area = max(1.0, (x1 - x0) * (y1 - y0))
-        bbox_radius = max(2, min(5, int((bbox_area / 10000) ** 0.5 * 4)))
-        image_floor = max(3, int(round(min(image_size) / 260)))
-        return max(bbox_radius, image_floor)
-    return max(3, fallback_radius // 2)
+    return max(2, min(6, int(min(image_size) * 0.0042)))
 
 
 def overlay_primitives(
@@ -913,6 +935,10 @@ def overlay_primitives(
         if config.draw_width and config.draw_width > 0
         else max(2, int(round(min(out.size) / 360)))
     )
+    skeleton_width = keypoint_skeleton_width(out.size, config)
+    keypoint_outline_width = max(
+        1, keypoint_bbox_width(out.size, config) // 2
+    )
     point_radius = (
         config.point_radius
         if config.point_radius and config.point_radius > 0
@@ -943,12 +969,16 @@ def overlay_primitives(
             if bbox:
                 draw_bbox(draw, bbox, color, line_width)
                 label_xy = (bbox[0], bbox[1])
-            keypoint_radius = keypoint_radius_for_primitive(
-                primitive, out.size, config, point_radius
-            )
-            draw_keypoint_skeleton(draw, primitive, line_width)
+            keypoint_radius = keypoint_radius_for_image(out.size, config)
+            draw_keypoint_skeleton(draw, primitive, skeleton_width)
             for point in primitive.get("keypoints", {}).values():
-                draw_point(draw, point, color, keypoint_radius)
+                draw_keypoint(
+                    draw,
+                    point,
+                    color,
+                    keypoint_radius,
+                    keypoint_outline_width,
+                )
 
         if label_xy is not None and labeled < config.max_labels:
             label_max_width = None
@@ -986,21 +1016,30 @@ def visualize_detection(
     include_prompt: bool = True,
 ) -> Image.Image:
     config = ensure_config(config)
-    palette = palette or build_palette()
+    if palette:
+        keypoint_palette = palette
+    else:
+        palette = build_palette()
+        keypoint_palette = build_keypoint_palette()
     keypoint_context = task_name or ""
     primitives = parse_detection_output(
         predictions, image.size, keypoint_context=keypoint_context
     )
     if include_prompt:
         primitives = parse_visual_prompt(prompt or "", image.size) + primitives
+    keypoint_instance_index = 0
     for primitive in primitives:
-        primitive["color"] = (
-            (255, 0, 0)
-            if primitive.get("is_prompt")
-            else color_for_label(
+        if primitive.get("is_prompt"):
+            primitive["color"] = (255, 0, 0)
+        elif primitive.get("kind") == "keypoint":
+            primitive["color"] = color_for_instance(
+                keypoint_palette, keypoint_instance_index
+            )
+            keypoint_instance_index += 1
+        else:
+            primitive["color"] = color_for_label(
                 palette,
                 primitive.get("label", "object"),
                 primitive.get("color_index", 0),
             )
-        )
     return overlay_primitives(image, primitives, config)

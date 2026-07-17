@@ -1,0 +1,64 @@
+{
+  "default_dataset": "blood-cell-visual",
+  "datasets": {
+    "blood-cell-visual": {
+      "input_format": "coco",
+      "default_input": "data/Blood Cell Detection",
+      "default_output": "jsonl_train/visual_prompt/blood-cell-object-detection/processed_visual_train.jsonl",
+      "annotation": "train/_annotations.coco.json",
+      "image_prefix": "",
+      "excluded_categories": ["cells"],
+      "category_aliases": {}
+    },
+    "objects365-visual": {
+      "input_format": "bbox_jsonl",
+      "default_input": "data/object365/json/processed_bbox_trainv2.jsonl",
+      "default_output": "jsonl_train/visual_prompt/Objects365/processed_train.jsonl",
+      "image_prefix": "",
+      "excluded_categories": [],
+      "category_aliases": {}
+    },
+    "lvis-fruit-vegetable-visual": {
+      "input_format": "bbox_jsonl",
+      "default_input": "data/LVIS_Fruits_And_Vegetables/json/processed_bbox_trainv2.jsonl",
+      "default_output": "jsonl_train/visual_prompt/LVIS_Fruits_And_Vegetables/processed_visual_train.jsonl",
+      "excluded_categories": [],
+      "category_aliases": {}
+    },
+    "sheep-visual": {
+      "input_format": "bbox_jsonl",
+      "default_input": "data/aerial-sheep-object-detection/json/processed_bbox_trainv2.jsonl",
+      "default_output": "jsonl_train/visual_prompt/aerial-sheep-object-detection/processed_visual_train.jsonl",
+      "excluded_categories": [],
+      "category_aliases": {}
+    },
+    "football-visual": {
+      "input_format": "bbox_jsonl",
+      "default_input": "data/football-object-detection/json/processed_bbox_trainv2.jsonl",
+      "default_output": "jsonl_train/visual_prompt/football-object-detection/processed_visual_train.jsonl",
+      "excluded_categories": [],
+      "category_aliases": {}
+    },
+    "industrial-safety-visual": {
+      "input_format": "bbox_jsonl",
+      "default_input": "data/Industrial-Site-Safety-Detection-v1-DATASET/json/processed_bbox_trainv2.jsonl",
+      "default_output": "jsonl_train/visual_prompt/Industrial-Site-Safety-Detection-v1-DATASET/processed_visual_train.jsonl",
+      "excluded_categories": [],
+      "category_aliases": {}
+    },
+    "owdod-visual": {
+      "input_format": "bbox_jsonl",
+      "default_input": "data/owdod/json/processed_bbox_trainv2.jsonl",
+      "default_output": "jsonl_train/visual_prompt/owdod/processed_visual_train.jsonl",
+      "excluded_categories": [],
+      "category_aliases": {}
+    },
+    "sku110k-visual": {
+      "input_format": "bbox_jsonl",
+      "default_input": "data/SKU110k/json/processed_bbox_trainv2.jsonl",
+      "default_output": "jsonl_train/visual_prompt/SKU110k/processed_visual_train.jsonl",
+      "excluded_categories": [],
+      "category_aliases": {}
+    }
+  }
+}

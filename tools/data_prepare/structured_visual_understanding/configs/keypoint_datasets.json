@@ -1,0 +1,79 @@
+{
+  "default_dataset": "ap-10k-keypoint",
+  "datasets": {
+    "ap-10k-keypoint": {
+      "adapter": "coco_keypoints",
+      "default_input": "data",
+      "default_intermediate": "data/RexOmni/keypoints/ap-10k/json/processed_train.jsonl",
+      "default_output": "jsonl_train/keypoints/ap-10k/processed_train.jsonl",
+      "annotation_files": [
+        "keypoints/ap-10k/annotations/ap10k-train-split1.json",
+        "keypoints/ap-10k/annotations/ap10k-train-split2.json",
+        "keypoints/ap-10k/annotations/ap10k-train-split3.json"
+      ],
+      "image_prefix": "keypoints/ap-10k/data",
+      "deduplicate_annotation_ids": true,
+      "require_images": true,
+      "include_boxes": true,
+      "keypoint_names": ["left eye", "right eye", "nose", "neck", "root of tail", "left shoulder", "left elbow", "left front paw", "right shoulder", "right elbow", "right front paw", "left hip", "left knee", "left back paw", "right hip", "right knee", "right back paw"]
+    },
+    "apt36k-keypoint": {
+      "adapter": "coco_keypoints",
+      "default_input": "data",
+      "default_intermediate": "data/RexOmni/keypoints/APT36k/json/processed_train.jsonl",
+      "default_output": "jsonl_train/keypoints/APT36k/processed_train.jsonl",
+      "annotation_files": ["keypoints/APT36k/apt36k_annotations.json"],
+      "image_prefix": "keypoints/APT36k/AP-36k-patr1",
+      "image_tail_components": 3,
+      "require_images": true,
+      "include_boxes": true,
+      "keypoint_names": ["left eye", "right eye", "nose", "neck", "root of tail", "left shoulder", "left elbow", "left front paw", "right shoulder", "right elbow", "right front paw", "left hip", "left knee", "left back paw", "right hip", "right knee", "right back paw"]
+    },
+    "human-art-keypoint": {
+      "adapter": "coco_keypoints",
+      "default_input": "data",
+      "default_intermediate": "data/RexOmni/keypoints/Human-Art/json/processed_train.jsonl",
+      "default_output": "jsonl_train/keypoints/Human-Art/processed_train.jsonl",
+      "annotation_files": ["keypoints/Human-Art/annotations/training_humanart.json"],
+      "strip_image_prefix": "HumanArt/",
+      "image_prefix": "keypoints/Human-Art",
+      "require_images": true,
+      "include_boxes": false,
+      "fixed_phrase": "person",
+      "keypoint_count": 17,
+      "keypoint_names": ["nose", "left eye", "right eye", "left ear", "right ear", "left shoulder", "right shoulder", "left elbow", "right elbow", "left wrist", "right wrist", "left hip", "right hip", "left knee", "right knee", "left ankle", "right ankle"]
+    },
+    "macaquepose-keypoint": {
+      "adapter": "macaque_csv",
+      "default_input": "data",
+      "default_intermediate": "data/RexOmni/keypoints/macaquepose_v1/json/processed_train.jsonl",
+      "default_output": "jsonl_train/keypoints/macaquepose_v1/processed_train.jsonl",
+      "annotation_file": "keypoints/macaquepose_v1/annotations.csv",
+      "image_root": "keypoints/macaquepose_v1/images",
+      "image_prefix": "keypoints/macaquepose_v1/images",
+      "fixed_phrase": "macaque",
+      "keypoint_names": ["nose", "left eye", "right eye", "left ear", "right ear", "left shoulder", "right shoulder", "left elbow", "right elbow", "left wrist", "right wrist", "left hip", "right hip", "left knee", "right knee", "left ankle", "right ankle"]
+    },
+    "mpii-keypoint": {
+      "adapter": "mpii_mat",
+      "default_input": "data",
+      "default_intermediate": "data/RexOmni/keypoints/mpii/json/processed_train.jsonl",
+      "default_output": "jsonl_train/keypoints/mpii/processed_train.jsonl",
+      "annotation_file": "keypoints/mpii/mpii_human_pose_v1_u12_2/mpii_human_pose_v1_u12_1.mat",
+      "image_root": "keypoints/mpii/images",
+      "image_prefix": "keypoints/mpii/images",
+      "fixed_phrase": "person",
+      "keypoint_names": ["right ankle", "right knee", "right hip", "left hip", "left knee", "left ankle", "pelvis", "thorax", "upper neck", "head top", "right wrist", "right elbow", "right shoulder", "left shoulder", "left elbow", "left wrist"]
+    },
+    "ochuman-keypoint": {
+      "adapter": "ochuman",
+      "default_input": "data",
+      "default_intermediate": "data/RexOmni/keypoints/ochuman/json/processed_train.jsonl",
+      "default_output": "jsonl_train/keypoints/ochuman/processed_train.jsonl",
+      "annotation_file": "keypoints/ochuman/ochuman.json",
+      "image_prefix": "keypoints/ochuman/images",
+      "fixed_phrase": "person",
+      "keypoint_names": ["right shoulder", "right elbow", "right wrist", "left shoulder", "left elbow", "left wrist", "right hip", "right knee", "right ankle", "left hip", "left knee", "left ankle", "head", "neck", "right ear", "left ear", "nose", "right eye", "left eye"]
+    }
+  }
+}

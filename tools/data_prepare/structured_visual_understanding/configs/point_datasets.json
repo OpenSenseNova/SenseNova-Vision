@@ -1,0 +1,11 @@
+{
+  "default_dataset": "fsc147",
+  "datasets": {
+    "fsc147": {
+      "default_input": "data/FSC147",
+      "default_output": "jsonl_train/point/FSC147/processed_point_train.jsonl",
+      "input_format": "fsc147",
+      "split": "train"
+    }
+  }
+}

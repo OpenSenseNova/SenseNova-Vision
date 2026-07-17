@@ -75,6 +75,9 @@ python -m pip install "panopticapi @ https://github.com/cocodataset/panopticapi/
 echo "--- Installing detection evaluation extension ---"
 python -m pip install -e tools/evaluation/detect/evaluation/fastevaluate
 
+echo "--- Installing multi-view 3D evaluation extension ---"
+python -m pip install -r tools/evaluation/recons/requirements.txt
+
 echo "--- Verifying installed dependencies ---"
 if ! PIP_CHECK_OUTPUT="$(python -m pip check 2>&1)"; then
     echo "${PIP_CHECK_OUTPUT}" >&2

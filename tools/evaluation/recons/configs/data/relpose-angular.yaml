@@ -1,0 +1,22 @@
+Re10K:
+  cfg:
+    _target_: datasets.re10k.Re10KDataset
+    Re10K_DIR: datas/re10k
+    seq_file: datasets/sequences/re10k_test_1719.txt
+  sampling:
+    strategy: random_order
+    num_frames: 10
+  seq_id_map: datasets/seq-id-maps/Re10K_relpose_seq-id-map_seed42.json
+  metric_thresholds: [5, 15, 30]
+
+CO3Dv2:
+  cfg:
+    _target_: datasets.co3d_v2.Co3dDataset
+    CO3D_DIR: datas/co3dv2/data
+    CO3D_ANNOTATION_DIR: datas/co3dv2/annotations
+    categories: all
+  sampling:
+    strategy: random_order
+    num_frames: 5
+  seq_id_map: datasets/seq-id-maps/CO3Dv2_relpose_seq-id-map_seed42.json
+  metric_thresholds: [5, 15, 30]

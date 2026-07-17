@@ -127,14 +127,22 @@ class SegJSONLIterableDataset(JSONLIterableDataset):
 
         while True:
             data_paths_per_worker_ = data_paths_per_worker[row_start_id:]
-            for row_idx, (data, image_dir) in enumerate(
+            for row_idx, (data, data_roots) in enumerate(
                 data_paths_per_worker_, start=row_start_id
             ):
                 sample = self.new_sample()
                 try:
                     data_item = json.loads(data)
-                    raw_images = self.load_image_list(image_dir, data_item.get("image"))
-                    raw_seg = self.load_image_list(image_dir, data_item.get("seg"))
+                    raw_images = self.load_image_list(
+                        data_roots,
+                        data_item.get("image"),
+                        role=self.INPUT_ROLE,
+                    )
+                    raw_seg = self.load_image_list(
+                        data_roots,
+                        data_item.get("seg"),
+                        role=self.OUTPUT_ROLE,
+                    )
                     for conversation in data_item["conversations"]:
                         if conversation["from"] == "human":
                             if "<image>" not in conversation["value"]:

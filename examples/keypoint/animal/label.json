@@ -1,5 +1,5 @@
 {
-  "task_name": "Keypoint",
+  "task_name": "Keypoint Animal",
   "input": "image.jpg",
   "output": "gt.png",
   "base_param": {},

@@ -1,7 +1,10 @@
 # Training
 
-This repository keeps the open-source training entry for SenseNova-Vision focused on
-the CV-Unify recipe.
+This guide describes the open-source SenseNova-Vision training entry and its
+default multimodal dataset configuration.
+
+Before launching training, prepare the required datasets by following
+[docs/train_data_prepare.md](train_data_prepare.md).
 
 ## Environment
 
@@ -13,41 +16,41 @@ bash setup.sh sensenova-vision
 conda activate sensenova-vision
 ```
 
-Set the pretrained model directory before launching training:
+Set the pretrained model directory before launching training.
+`SENSENOVA_REPO_DIR` and `SENSENOVA_ENV_PATH` are optional:
 
 ```bash
 export SENSENOVA_MODEL_DIR=/path/to/pretrained/sensenova-vision
-```
-
-If the runtime needs an explicit repository or conda environment path, set:
-
-```bash
 export SENSENOVA_REPO_DIR=/path/to/sensenova-vision
 export SENSENOVA_ENV_PATH=/path/to/conda/env
 ```
 
 ## Data
 
-The training recipe uses:
+The default training configuration uses:
 
 ```text
 data/configs/cv_unify/cv_unify_baseline_v9.yaml
 data/dataset_info.py
 ```
 
-`data/dataset_info.py` contains the dataset registry and dataset paths used by
-the CV-Unify config. Update the paths there to match your local storage before
-training.
+`data/dataset_info.py` contains the dataset registry and paths referenced by the
+default configuration. Update the paths there to match your local storage
+before training.
 
 ## Launch Training
+
+Training requires at least 2 machines with 8 x 80GB GPUs each; 32 or more such
+machines are recommended.
+
+Submit the following command through a multi-node training system. The launcher
+reads `WORLD_SIZE`, `RANK`, `MASTER_ADDR`, and `MASTER_PORT` from the distributed
+runtime. The number of GPUs per node is detected with `nvidia-smi` and can be
+overridden with `SENSENOVA_GPU_PER_NODE` when necessary.
 
 ```bash
 bash scripts/train_cv_unify.sh data/configs/cv_unify/cv_unify_baseline_v9.yaml
 ```
-
-The script prints the resolved config, repository path, process count, shard
-count, replica count, and gradient accumulation setting before launching
-`train/pretrain_unified_navit.py` with the CV-Unify defaults.
 
 ## Dataset Smoke Test
 

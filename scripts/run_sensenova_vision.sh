@@ -26,7 +26,7 @@ Commands:
 
   benchmark [tasks] [sub_tasks] [extra inference_benchmark.sh args]
       Run scripts/inference_benchmark.sh.
-      tasks supports all, seg, detection, depth, normal.
+      tasks supports all, seg, detection, depth, normal, recon3d, camera_pose.
       sub_tasks supports all or dataset/sub-task names such as pan_coco_val.
 
   evaluate <output_dir> [tasks] [extra eval_all.sh args]

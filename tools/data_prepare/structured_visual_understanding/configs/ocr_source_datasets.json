@@ -1,0 +1,49 @@
+{
+  "default_dataset": "sroie-text-bbox",
+  "datasets": {
+    "sroie-text-bbox": {
+      "adapter": "text_files",
+      "default_input": "data/sroie-datasetv2",
+      "default_output": "data/sroie-datasetv2/json/processed_text_line_trainv2.jsonl",
+      "annotation_root": "versions/4/SROIE2019/train/box",
+      "annotation_glob": "*.txt",
+      "image_root": "versions/4/SROIE2019/train/img",
+      "image_name_template": "{stem}.jpg",
+      "image_prefix": "sroie-datasetv2/versions/4/SROIE2019/train/img",
+      "delimiter": ",",
+      "coord_count": 8,
+      "granularity": "text_line",
+      "ignore_texts": []
+    },
+    "icdar2013-word-bbox": {
+      "adapter": "text_files",
+      "default_input": "data/OCR/icdar2013",
+      "default_output": "data/OCR/icdar2013/json/processed_word_trainv2.jsonl",
+      "annotation_root": "Challenge2_Training_Task1_GT",
+      "annotation_glob": "*.txt",
+      "image_root": "Challenge2_Training_Task12_Images",
+      "image_name_template": "{stem}.jpg",
+      "annotation_stem_strip_prefix": "gt_",
+      "image_prefix": "OCR/icdar2013/Challenge2_Training_Task12_Images",
+      "delimiter": ",",
+      "coord_count": 4,
+      "granularity": "word",
+      "ignore_texts": ["###"]
+    },
+    "icdar2015-word": {
+      "adapter": "text_files",
+      "default_input": "data/OCR/icdar2015",
+      "default_output": "data/OCR/icdar2015/json/processed_word_trainv2.jsonl",
+      "annotation_root": "ch4_training_localization_transcription_gt",
+      "annotation_glob": "*.txt",
+      "image_root": "ch4_training_images",
+      "image_name_template": "{stem}.jpg",
+      "annotation_stem_strip_prefix": "gt_",
+      "image_prefix": "OCR/icdar2015/ch4_training_images",
+      "delimiter": ",",
+      "coord_count": 8,
+      "granularity": "word",
+      "ignore_texts": ["###"]
+    }
+  }
+}

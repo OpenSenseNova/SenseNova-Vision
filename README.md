@@ -25,9 +25,11 @@
 
 ## 📣 Updated News
 
+- `[2026.07.17]` Release of the [training pipeline](./docs/TRAIN.md) adapted for open-source datasets.
+- `[2026.07.17]` Added [benchmark and evaluation support](./docs/EVAL.md) for multi-view reconstruction and camera pose estimation.
 - `[2026.07.08]` Release of the dataset for [SenseNova-Vision-Corpus-50M](https://huggingface.co/datasets/sensenova/SenseNova-Vision-Corpus-50M).
 - `[2026.07.08]` Initial release of the weights for [SenseNova-Vision-7B-MoT](https://huggingface.co/sensenova/SenseNova-Vision-7B-MoT).
-- `[2026.07.08]` Initial release of the [inference code](https://github.com/OpenSenseNova/SenseNova-Vision) for SenseNova-Vision.
+- `[2026.07.08]` Initial release of the [inference code](./docs/INFERENCE.md) for SenseNova-Vision.
 - `[2026.07.08]` Release of the [Technical Report](https://arxiv.org/abs/2607.06560) for SenseNova-Vision.
 
 ## 🌟 Overview
@@ -66,6 +68,7 @@ requires no task-specific prediction heads, decoders, or architectural branches.
 
 This repository provides one entrypoint for examples, single-image inference,
 interactive inference, and benchmark inference. For the full runtime guide, see
+[`docs/INFERENCE.md`](./docs/INFERENCE.md). For benchmark evaluation guide, see
 [`docs/EVAL.md`](./docs/EVAL.md).
 
 Create the environment from the repository root:
@@ -108,6 +111,16 @@ to [`docs/data_prepare.md`](./docs/data_prepare.md).
 bash scripts/run_sensenova_vision.sh benchmark all \
   --num_gpus 8 \
   --tasks_per_gpu 2
+```
+
+To train SenseNova-Vision, first prepare the training data by following
+[`docs/train_data_prepare.md`](./docs/train_data_prepare.md), then launch
+training as described in [`docs/TRAIN.md`](./docs/TRAIN.md). Training requires
+at least 2 machines with 8 x 80GB GPUs each; 32 or more such machines are
+recommended.
+
+```bash
+bash scripts/train_cv_unify.sh data/configs/cv_unify/cv_unify_baseline_v9.yaml
 ```
 
 ## 🏆 Benchmark Results
@@ -654,7 +667,83 @@ We further compare SenseNova-Vision with recent generalist visual models that sp
 
 </details>
 
-
+<details>
+<summary>Multi-view Reconstruction</summary>
+<table align="center">
+  <tr>
+    <td align="center">
+      <a href="./assets/showcase/multi_view_reconstruction/indoor_1_input.webp">
+        <img height="220" alt="indoor 1 input" src="./assets/showcase/multi_view_reconstruction/indoor_1_input.webp">
+      </a>
+    </td>
+    <td align="center">
+      <a href="./assets/showcase/multi_view_reconstruction/indoor_1_output.webp">
+        <img height="220" alt="indoor 1 output" src="./assets/showcase/multi_view_reconstruction/indoor_1_output.webp">
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <a href="./assets/showcase/multi_view_reconstruction/indoor_2_input.webp">
+        <img height="220" alt="indoor 2 input" src="./assets/showcase/multi_view_reconstruction/indoor_2_input.webp">
+      </a>
+    </td>
+    <td align="center">
+      <a href="./assets/showcase/multi_view_reconstruction/indoor_2_output.webp">
+        <img height="220" alt="indoor 2 output" src="./assets/showcase/multi_view_reconstruction/indoor_2_output.webp">
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <a href="./assets/showcase/multi_view_reconstruction/object_1_input.webp">
+        <img height="220" alt="object 1 input" src="./assets/showcase/multi_view_reconstruction/object_1_input.webp">
+      </a>
+    </td>
+    <td align="center">
+      <a href="./assets/showcase/multi_view_reconstruction/object_1_output.webp">
+        <img height="220" alt="object 1 output" src="./assets/showcase/multi_view_reconstruction/object_1_output.webp">
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <a href="./assets/showcase/multi_view_reconstruction/object_2_input.webp">
+        <img height="220" alt="object 2 input" src="./assets/showcase/multi_view_reconstruction/object_2_input.webp">
+      </a>
+    </td>
+    <td align="center">
+      <a href="./assets/showcase/multi_view_reconstruction/object_2_output.webp">
+        <img height="220" alt="object 2 output" src="./assets/showcase/multi_view_reconstruction/object_2_output.webp">
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <a href="./assets/showcase/multi_view_reconstruction/outdoor_1_input.webp">
+        <img height="220" alt="outdoor 1 input" src="./assets/showcase/multi_view_reconstruction/outdoor_1_input.webp">
+      </a>
+    </td>
+    <td align="center">
+      <a href="./assets/showcase/multi_view_reconstruction/outdoor_1_output.webp">
+        <img height="220" alt="outdoor 1 output" src="./assets/showcase/multi_view_reconstruction/outdoor_1_output.webp">
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <a href="./assets/showcase/multi_view_reconstruction/outdoor_2_input.webp">
+        <img height="220" alt="outdoor 2 input" src="./assets/showcase/multi_view_reconstruction/outdoor_2_input.webp">
+      </a>
+    </td>
+    <td align="center">
+      <a href="./assets/showcase/multi_view_reconstruction/outdoor_2_output.webp">
+        <img height="220" alt="outdoor 2 output" src="./assets/showcase/multi_view_reconstruction/outdoor_2_output.webp">
+      </a>
+    </td>
+  </tr>
+</table>
+</details>
 
 ## Data Protocol
 

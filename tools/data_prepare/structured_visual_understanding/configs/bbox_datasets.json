@@ -1,0 +1,230 @@
+{
+  "default_dataset": "blood-cell",
+  "datasets": {
+    "blood-cell": {
+      "default_input": "data/Blood Cell Detection",
+      "default_output": "jsonl_train/bbox/blood-cell-object-detection/processed_bbox_train.jsonl",
+      "annotation": "train/_annotations.coco.json",
+      "image_prefix": "",
+      "excluded_categories": ["cells"],
+      "category_aliases": {}
+    },
+    "aptv2": {
+      "default_input": "data/APTv2",
+      "default_output": "jsonl_train/bbox/APTv2/processed_bbox_train.jsonl",
+      "annotation": "annotations/train_annotations.json",
+      "image_prefix": "APTv2/data",
+      "excluded_categories": [],
+      "category_aliases": {
+        "rhino": "rhinoceros"
+      }
+    },
+    "objects365-bbox": {
+      "default_input": "data/object365",
+      "default_output": "jsonl_train/bbox/Objects365/processed_train.jsonl",
+      "annotation": "json/processed_bbox_trainv2.jsonl",
+      "image_prefix": "",
+      "excluded_categories": [],
+      "category_aliases": {},
+      "input_format": "bbox_jsonl"
+    },
+    "cdla-layout": {
+      "default_input": "data",
+      "default_output": "jsonl_train/bbox/Layout/CDLA/processed_train.jsonl",
+      "annotation": "RexOmni/Layout/CDLA/json/processed_trainv2.jsonl",
+      "image_prefix": "",
+      "excluded_categories": [],
+      "category_aliases": {},
+      "input_format": "bbox_jsonl",
+      "task_prefix": "<task: bbox detection>: "
+    },
+    "doclaynet-core-layout": {
+      "default_input": "data",
+      "default_output": "jsonl_train/bbox/Layout/DocLayNet_core/processed_train.jsonl",
+      "annotation": "RexOmni/Layout/DocLayNet_core/json/processed_trainv2.jsonl",
+      "image_prefix": "",
+      "excluded_categories": [],
+      "category_aliases": {},
+      "input_format": "bbox_jsonl",
+      "task_prefix": "<task: bbox detection>: "
+    },
+    "publaynet-layout": {
+      "default_input": "data",
+      "default_output": "jsonl_train/bbox/Layout/publaynet/processed_train.jsonl",
+      "annotation": "RexOmni/Layout/publaynet/json/processed_trainv2.jsonl",
+      "image_prefix": "",
+      "excluded_categories": [],
+      "category_aliases": {},
+      "input_format": "bbox_jsonl",
+      "task_prefix": "<task: bbox detection>: "
+    },
+    "tablebank-layout": {
+      "default_input": "data",
+      "default_output": "jsonl_train/bbox/Layout/TableBank/processed_train.jsonl",
+      "annotation": "RexOmni/Layout/TableBank/json/processed_trainv2.jsonl",
+      "image_prefix": "",
+      "excluded_categories": [],
+      "category_aliases": {},
+      "input_format": "bbox_jsonl",
+      "task_prefix": "<task: bbox detection>: "
+    },
+    "tabrecset-layout": {
+      "default_input": "data",
+      "default_output": "jsonl_train/bbox/Layout/TabRecSet/processed_train.jsonl",
+      "annotation": "RexOmni/Layout/TabRecSet/json/processed_trainv2.jsonl",
+      "image_prefix": "",
+      "excluded_categories": [],
+      "category_aliases": {},
+      "input_format": "bbox_jsonl",
+      "task_prefix": "<task: bbox detection>: ",
+      "verify_images": true
+    },
+    "os-atlas-desktop-gui": {
+      "default_input": "data",
+      "default_output": "jsonl_train/bbox/GUI/OS-Atlas-data/processed_desktop_domain_train.jsonl",
+      "annotation": "RexOmni/GUI/OS-Atlas-data/json/processed_desktop_domain_train.jsonl",
+      "image_prefix": "",
+      "excluded_categories": [],
+      "category_aliases": {},
+      "input_format": "bbox_jsonl",
+      "task_prefix": "<task: bbox detection>: "
+    },
+    "os-atlas-mobile-gui": {
+      "default_input": "data",
+      "default_output": "jsonl_train/bbox/GUI/OS-Atlas-data/processed_mobile_domain_train.jsonl",
+      "annotation": "RexOmni/GUI/OS-Atlas-data/json/processed_mobile_domain_train.jsonl",
+      "image_prefix": "",
+      "excluded_categories": [],
+      "category_aliases": {},
+      "input_format": "bbox_jsonl",
+      "task_prefix": "<task: bbox detection>: "
+    },
+    "os-atlas-rico-gui": {
+      "default_input": "data",
+      "default_output": "jsonl_train/bbox/GUI/OS-Atlas-data/processed_rico_train.jsonl",
+      "annotation": "RexOmni/GUI/OS-Atlas-data/json/processed_rico_train.jsonl",
+      "image_prefix": "",
+      "excluded_categories": [],
+      "category_aliases": {},
+      "input_format": "bbox_jsonl",
+      "task_prefix": "<task: bbox detection>: "
+    },
+    "os-atlas-web-gui": {
+      "default_input": "data",
+      "default_output": "jsonl_train/bbox/GUI/OS-Atlas-data/processed_web_domain_train.jsonl",
+      "annotation": "RexOmni/GUI/OS-Atlas-data/json/processed_web_domain_train.jsonl",
+      "image_prefix": "",
+      "excluded_categories": [],
+      "category_aliases": {},
+      "input_format": "bbox_jsonl",
+      "task_prefix": "<task: bbox detection>: "
+    },
+    "showui-desktop-gui": {
+      "default_input": "data",
+      "default_output": "jsonl_train/bbox/GUI/ShowUI-desktop/processed_train.jsonl",
+      "annotation": "RexOmni/GUI/ShowUI-desktop/json/processed_train.jsonl",
+      "image_prefix": "",
+      "excluded_categories": [],
+      "category_aliases": {},
+      "input_format": "bbox_jsonl",
+      "task_prefix": "<task: bbox detection>: "
+    },
+    "ui-refexp-gui": {
+      "default_input": "data",
+      "default_output": "jsonl_train/bbox/GUI/ui_refexp/processed_train.jsonl",
+      "annotation": "RexOmni/GUI/ui_refexp/json/processed_train.jsonl",
+      "image_prefix": "",
+      "excluded_categories": [],
+      "category_aliases": {},
+      "input_format": "bbox_jsonl",
+      "task_prefix": "<task: bbox detection>: "
+    },
+    "paco-lvis-bbox": {
+      "default_input": "data/PACO",
+      "default_output": "jsonl_train/bbox/PACO_LVIS/processed_bbox_train.jsonl",
+      "annotation": "json/processed_bbox_trainv2.jsonl",
+      "image_prefix": "",
+      "excluded_categories": [],
+      "category_aliases": {},
+      "input_format": "bbox_jsonl",
+      "task_prefix": "<task: bbox detection>: "
+    },
+    "sku110k-bbox": {
+      "default_input": "data/SKU110k",
+      "default_output": "jsonl_train/bbox/SKU110k/processed_bbox_train.jsonl",
+      "annotation": "json/processed_bbox_trainv2.jsonl",
+      "image_prefix": "",
+      "excluded_categories": [],
+      "category_aliases": {},
+      "input_format": "bbox_jsonl",
+      "task_prefix": "<task: bbox detection>: "
+    },
+    "humanref-bbox": {
+      "default_input": "data/humanref_cot_45k_converted",
+      "default_output": "jsonl_train/bbox/humanref/processed_bbox_train.jsonl",
+      "annotation": "json/processed_bbox_trainv2.jsonl",
+      "image_prefix": "",
+      "excluded_categories": [],
+      "category_aliases": {},
+      "input_format": "bbox_jsonl",
+      "task_prefix": "<task: bbox detection>: "
+    },
+    "rexverse-onesentence-bbox": {
+      "default_input": "data/RexVerse-2M/rexverse2M_onesentense",
+      "default_output": "jsonl_train/bbox/rexverse_onesentense/processed_bbox_train.jsonl",
+      "annotation": "json/processed_bbox_trainv2.jsonl",
+      "image_prefix": "",
+      "excluded_categories": [],
+      "category_aliases": {},
+      "input_format": "bbox_jsonl",
+      "task_prefix": "<task: bbox detection>: "
+    },
+    "rexverse-referring-bbox": {
+      "default_input": "data/RexVerse-2M/rexverse2M_referring",
+      "default_output": "jsonl_train/bbox/rexverse_referring/processed_bbox_train.jsonl",
+      "annotation": "json/processed_bbox_trainv2.jsonl",
+      "image_prefix": "",
+      "excluded_categories": [],
+      "category_aliases": {},
+      "input_format": "bbox_jsonl",
+      "task_prefix": "<task: bbox detection>: "
+    },
+    "egoobjects-bbox": {
+      "default_input": "data",
+      "default_output": "jsonl_train/bbox/EgoObjects/processed_train.jsonl",
+      "annotation": "EgoObjects/json/processed_bbox_trainv2.jsonl",
+      "image_prefix": "", "excluded_categories": [], "category_aliases": {},
+      "input_format": "bbox_jsonl", "task_prefix": "<task: bbox detection>: "
+    },
+    "v3det-ovd-bbox": {
+      "default_input": "data/V3Det___V3Det/raw/V3Det",
+      "default_output": "jsonl_train/bbox/V3Det_ovd/processed_train.jsonl",
+      "annotation": "json/processed_bbox_trainv2.jsonl",
+      "image_prefix": "", "excluded_categories": [], "category_aliases": {},
+      "input_format": "bbox_jsonl", "task_prefix": "<task: bbox detection>: "
+    },
+    "owdod-bbox": {
+      "default_input": "data",
+      "default_output": "jsonl_train/bbox/owdod/processed_train.jsonl",
+      "annotation": "owdod/json/processed_bbox_trainv2.jsonl",
+      "image_prefix": "", "excluded_categories": [], "category_aliases": {},
+      "input_format": "bbox_jsonl", "task_prefix": "<task: bbox detection>: "
+    },
+    "lvis-fruit-vegetable-bbox": {
+      "default_input": "data/LVIS_Fruits_And_Vegetables", "default_output": "jsonl_train/bbox/LVIS_Fruits_And_Vegetables/processed_train.jsonl",
+      "annotation": "json/processed_bbox_trainv2.jsonl", "image_prefix": "", "excluded_categories": [], "category_aliases": {}, "input_format": "bbox_jsonl", "task_prefix": "<task: bbox detection>: "
+    },
+    "sheep-bbox": {
+      "default_input": "data/aerial-sheep-object-detection", "default_output": "jsonl_train/bbox/aerial-sheep-object-detection/processed_train.jsonl",
+      "annotation": "json/processed_bbox_trainv2.jsonl", "image_prefix": "", "excluded_categories": [], "category_aliases": {}, "input_format": "bbox_jsonl", "task_prefix": "<task: bbox detection>: "
+    },
+    "football-bbox": {
+      "default_input": "data/football-object-detection", "default_output": "jsonl_train/bbox/football-object-detection/processed_train.jsonl",
+      "annotation": "json/processed_bbox_trainv2.jsonl", "image_prefix": "", "excluded_categories": [], "category_aliases": {}, "input_format": "bbox_jsonl", "task_prefix": "<task: bbox detection>: "
+    },
+    "industrial-safety-bbox": {
+      "default_input": "data/Industrial-Site-Safety-Detection-v1-DATASET", "default_output": "jsonl_train/bbox/Industrial-Site-Safety-Detection-v1-DATASET/processed_train.jsonl",
+      "annotation": "json/processed_bbox_trainv2.jsonl", "image_prefix": "", "excluded_categories": [], "category_aliases": {}, "input_format": "bbox_jsonl", "task_prefix": "<task: bbox detection>: "
+    }
+  }
+}

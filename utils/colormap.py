@@ -11,7 +11,9 @@ from hashlib import md5
 import numpy as np
 
 __all__ = [
+    "build_keypoint_palette",
     "build_palette",
+    "color_for_instance",
     "color_for_label",
     "color_for_segment",
     "colormap",
@@ -20,6 +22,25 @@ __all__ = [
     "stable_index",
     "stable_jitter",
 ]
+
+_KEYPOINT_COLOR_PRIORITY = (
+    0,
+    12,
+    9,
+    13,
+    51,
+    2,
+    25,
+    31,
+    36,
+    5,
+    18,
+    61,
+    43,
+    6,
+    67,
+    10,
+)
 
 # fmt: off
 # RGB:
@@ -161,6 +182,14 @@ def build_palette(rgb=True, maximum=255):
     ]
 
 
+def build_keypoint_palette(rgb=True, maximum=255):
+    """Prioritize perceptually distinct colors for dense keypoint instances."""
+    palette = build_palette(rgb=rgb, maximum=maximum)
+    priority = list(_KEYPOINT_COLOR_PRIORITY)
+    order = priority + [i for i in range(len(palette)) if i not in priority]
+    return [palette[i] for i in order]
+
+
 def stable_index(text, modulo):
     digest = md5(str(text).encode("utf-8")).digest()
     return int.from_bytes(digest[:4], "little") % max(1, modulo)
@@ -182,6 +211,14 @@ def color_for_segment(palette, category_id, index=0, segment_id=None):
     base = palette[int(key) % len(palette)]
     seed = segment_id if segment_id is not None else index
     return stable_jitter(base, seed)
+
+
+def color_for_instance(palette, index=0):
+    """Return a deterministic color for an instance in presentation order."""
+    if not palette:
+        palette = build_palette()
+    palette_idx = int(index) % len(palette)
+    return color_for_segment(palette, palette_idx, index, f"instance-{index}")
 
 
 def color_for_label(palette, label, index=0):

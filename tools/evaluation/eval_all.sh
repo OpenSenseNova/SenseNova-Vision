@@ -17,7 +17,7 @@ Usage:
 
 Options:
   --output_dir DIR        Benchmark output directory to evaluate.
-  --tasks TASKS           all | detection | depth | normal | segmentation.
+  --tasks TASKS           all | detection | depth | normal | segmentation | recon3d | camera_pose.
                           Comma-separated values are supported. Default: all.
   --parallel              Run selected top-level metric tasks in parallel.
                           This is task-level parallelism over detection/depth/
@@ -81,7 +81,7 @@ normalize_tasks() {
   local task normalized
   SELECTED_TASKS=()
   if [[ "$raw_tasks" == "all" ]]; then
-    SELECTED_TASKS=(detect depth normal seg)
+    SELECTED_TASKS=(detect depth normal seg recon3d camera_pose)
     return 0
   fi
   IFS=',' read -r -a task_items <<< "$raw_tasks"
@@ -91,8 +91,10 @@ normalize_tasks() {
       depth) normalized="depth" ;;
       normal) normalized="normal" ;;
       seg|segmentation) normalized="seg" ;;
+      recon3d) normalized="recon3d" ;;
+      camera_pose) normalized="camera_pose" ;;
       "") echo "[ERROR] Empty task in --tasks '$raw_tasks'." 1>&2; return 1 ;;
-      *) echo "[ERROR] Unknown task '$task'. Supported: all, detection, depth, normal, segmentation." 1>&2; return 1 ;;
+      *) echo "[ERROR] Unknown task '$task'. Supported: all, detection, depth, normal, segmentation, recon3d, camera_pose." 1>&2; return 1 ;;
     esac
     SELECTED_TASKS+=("$normalized")
   done
@@ -104,6 +106,8 @@ script_for_task() {
     depth) echo "$TOOL_ROOT/Marigold_normal_depth/eval_depth.sh" ;;
     normal) echo "$TOOL_ROOT/Marigold_normal_depth/eval_normals.sh" ;;
     seg) echo "$TOOL_ROOT/segment/eval_segmentation.sh" ;;
+    recon3d) echo "$TOOL_ROOT/recons/mv_recon/eval.py" ;;
+    camera_pose) echo "$TOOL_ROOT/recons/relpose/eval_angle.py" ;;
   esac
 }
 
@@ -131,6 +135,48 @@ LOG_DIR="$TMP_DIR/local_logs"
 mkdir -p "$LOG_DIR"
 ts="$(date +%Y%m%d_%H%M%S)"
 RUN_LOG="$LOG_DIR/eval_all_${METRIC_LABEL}_${ts}.log"
+
+run_multiview3d() {
+  local task="$1"
+  local log="$LOG_DIR/${task}_${METRIC_LABEL}_${ts}.log"
+  local python_exe="${EVAL_PYTHON:-python}"
+
+  (
+    cd "$TOOL_ROOT/recons"
+    if [ "$task" = recon3d ]; then
+      cmd=("${python_exe}" mv_recon/eval.py varint.predict_root="${TMP_DIR}")
+    elif [ "$task" = camera_pose ]; then
+      cmd=("${python_exe}" relpose/eval_angle.py pose_type=c2w varint.predict_root="${TMP_DIR}")
+    fi
+
+    ret=0
+    {
+      echo "========== [$task] START $(date) =========="
+      echo "[CMD] ${cmd[@]}"
+      echo "[LOG] $log"
+
+      if ! "${cmd[@]}" 2>&1 | tee "$log"; then
+        ret=1
+      fi
+
+      if [ "$ret" = 0 ]; then
+        if [ "$task" = recon3d ]; then
+          cp outputs/mv_recon/*.csv "${TMP_DIR}/recon3d/" || ret=1
+        elif [ "$task" = camera_pose ]; then
+          cp outputs/relpose-angular/*.csv "${TMP_DIR}/camera_pose/" || ret=1
+        fi
+      fi
+
+      if [ "$ret" = 0 ]; then
+        echo "========== [$task] OK $(date) =========="
+      else
+        echo "========== [$task] FAIL $(date) =========="
+      fi
+    } | tee -a "$RUN_LOG"
+
+    return "$ret"
+  )
+}
 
 run_one () {
   local name="$1"
@@ -170,7 +216,11 @@ if [[ "$PARALLEL" == "1" ]]; then
   # Parallel execution can increase the risk of file overwrite or resource conflicts.
   TASK_PIDS=()
   for task in "${SELECTED_TASKS[@]}"; do
-    run_one "$task" "$(script_for_task "$task")" &
+    if [ "$task" = recon3d -o "$task" = camera_pose ]; then
+      run_multiview3d "$task" &
+    else
+      run_one "$task" "$(script_for_task "$task")" &
+    fi
     TASK_PIDS+=("$!")
   done
   for pid in "${TASK_PIDS[@]}"; do
@@ -178,7 +228,11 @@ if [[ "$PARALLEL" == "1" ]]; then
   done
 else
   for task in "${SELECTED_TASKS[@]}"; do
-    run_one "$task" "$(script_for_task "$task")" || fail=1
+    if [ "$task" = recon3d -o "$task" = camera_pose ]; then
+      run_multiview3d "$task" || fail=1
+    else
+      run_one "$task" "$(script_for_task "$task")" || fail=1
+    fi
   done
 fi
 

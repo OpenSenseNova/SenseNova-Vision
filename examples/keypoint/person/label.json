@@ -1,0 +1,7 @@
+{
+  "task_name": "Keypoint Person",
+  "input": "image.png",
+  "output": "gt.png",
+  "base_param": {},
+  "prompt": "Detect all instances of <p>person</p> in the image. Unlike depth or pose visualization tasks, output structured text with each object class, <bbox>, and nose, left eye, right eye, left ear, right ear, left shoulder, right shoulder, left elbow, right elbow, left wrist, right wrist, left hip, right hip, left knee, right knee, left ankle, right ankle coordinates for further processing."
+}

@@ -20,6 +20,7 @@ Default layout:
     inter_seg_data/
     ref_seg_data/
     rea_seg_data/
+    multiview3d_data/
     ...
   jsonl_generate/
     detection/
@@ -165,7 +166,7 @@ Convert the COCO panoptic masks to contiguous semantic category IDs for the
 GenSeg semantic metric:
 
 ```bash
-python tools/data_prepare/prepare_segmentation_gt.py coco-panoptic-semseg \
+python tools/data_prepare/segmentation/prepare_semantic.py coco-panoptic \
   --data-root datas/gen_seg_data/coco2017 \
   --split val
 ```
@@ -208,7 +209,7 @@ python tools/external/mmdetection/tools/dataset_converters/ade20k2coco.py \
 python tools/external/mmdetection/tools/dataset_converters/ade20k2coco.py \
   datas/ov_seg_data/ade20k \
   --task instance
-python tools/data_prepare/prepare_segmentation_gt.py ade20k-semantic \
+python tools/data_prepare/segmentation/prepare_semantic.py ade20k \
   --data-root datas/ov_seg_data/ade20k \
   --split validation
 ```
@@ -232,7 +233,7 @@ rm "$REF_DIR/refcoco.zip" "$REF_DIR/refcoco+.zip" "$REF_DIR/refcocog.zip"
 [ -e "$REF_DIR/images/coco2014" ] || ln -s ../../gen_seg_data/coco2014 "$REF_DIR/images/coco2014"
 unset REF_DIR
 
-python tools/data_prepare/prepare_segmentation_gt.py refcoco-binary \
+python tools/data_prepare/segmentation/prepare_binary.py refcoco \
   --data-root datas/ref_seg_data \
   --datasets refcoco refcoco+ refcocog \
   --split val
@@ -254,9 +255,10 @@ unzip "$REA_DIR/test.zip" -d "$REA_DIR"
 rm "$REA_DIR/val.zip" "$REA_DIR/test.zip"
 unset REA_DIR
 
-python tools/data_prepare/prepare_segmentation_gt.py reason-binary \
-  --data-root datas/rea_seg_data \
-  --splits val test
+python tools/data_prepare/segmentation/prepare_binary.py reasonseg \
+  --data-root datas/rea_seg_data --split val
+python tools/data_prepare/segmentation/prepare_binary.py reasonseg \
+  --data-root datas/rea_seg_data --split test
 ```
 
 ### 5. GCG Segmentation Dataset
@@ -305,7 +307,7 @@ mv "$INTER_DIR/PSALM_data/coco_interactive_val_psalm.json" "$INTER_DIR/annotatio
 rm -rf "$INTER_DIR/PSALM_data" "$INTER_DIR/PSALM_data.zip"
 unset INTER_DIR
 
-python tools/data_prepare/prepare_segmentation_gt.py interseg-binary \
+python tools/data_prepare/segmentation/prepare_binary.py coco-interactive \
   --data-root datas/inter_seg_data \
   --dataset coco_interactive_psalm \
   --split val
@@ -359,7 +361,7 @@ repository root:
 
 - `bash scripts/run_sensenova_vision.sh evaluate output/benchmark detection`
 
-## Geometry Data
+## Dense Geometry Data
 
 Download the depth and normal benchmark data archive and extract it as
 `datas/geometry_data/`:
@@ -377,6 +379,54 @@ datas/geometry_data/
 
 Depth and normal benchmark jobs pass `--data_root datas/geometry_data` to
 `inference/benchmark/batch_dense_geometry.py`.
+
+## Multi-View 3D Benchmark Datasets
+
+Dataset preparation scripts are provided under `tools/evaluation/recons/datasets/preprocess/`.
+
+Read each of the scripts before running the following commands to download and prepare each dataset:
+
+```bash
+cd tools/evaluation/recons
+
+bash datasets/preprocess/prepare_7scenes.sh   # reconstruction
+bash datasets/preprocess/prepare_eth3d.sh     # reconstruction
+bash datasets/preprocess/prepare_re10k.sh     # camera pose estimation
+bash datasets/preprocess/prepare_co3dv2.sh    # camera pose estimation; manual download required
+```
+
+> **Note:** `prepare_co3dv2.sh` assumes the CO3D v2 dataset has already been downloaded manually. See the instructions in the script.
+
+By default, the datasets are prepared under:
+
+```text
+tools/evaluation/recons/datas/
+```
+
+You should move the directory to your data root and leave a link at the original location:
+
+```bash
+DATA_ROOT=datas
+
+mkdir -p "$DATA_ROOT"
+mv tools/evaluation/recons/datas "$DATA_ROOT/multiview3d_data"
+ln -sfn "$(realpath "$DATA_ROOT/multiview3d_data")" tools/evaluation/recons/datas
+```
+
+The expected directory layout is:
+
+```text
+$DATA_ROOT/
+└── multiview3d_data/
+    ├── 7scenes/
+    ├── eth3d/
+    ├── re10k/
+    └── co3dv2/
+        ├── annotations/
+        └── data/
+
+tools/evaluation/recons/datas -> $DATA_ROOT/multiview3d_data
+```
 
 ## Dataset Settings
 
@@ -430,3 +480,14 @@ those evaluation files.
 | Sub-task | Datasets | Public links |
 | --- | --- | --- |
 | Surface normal estimation | NYU Depth V2 / NYU, ScanNet, iBims-1 | [NYU Depth V2](https://cs.nyu.edu/~fergus/datasets/nyu_depth_v2.html), [ScanNet](https://www.scan-net.org/), [iBims-1](https://www.asg.ed.tum.de/lmf/ibims1/) |
+
+### Multi-View 3D
+| Sub-task | Datasets | Public links |
+| --- | --- | --- |
+| Reconstruction | 7Scenes, ETH3D | [7Scenes], [ETH3D] |
+| Camera pose Estimation | Re10K, Co3Dv2 | [RealEstate10K], [Co3Dv2] |
+
+[7Scenes]: https://www.microsoft.com/en-us/research/project/rgb-d-dataset-7-scenes/
+[ETH3D]: https://www.eth3d.net/datasets
+[RealEstate10K]: https://google.github.io/realestate10k/
+[Co3Dv2]: https://github.com/facebookresearch/co3d/
