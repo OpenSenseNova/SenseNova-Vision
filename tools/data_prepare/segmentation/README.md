@@ -26,8 +26,10 @@ expected `datas/` layout are documented in
 
 ## Primary Entrypoints
 
-`prepare_binary.py` handles RefCOCO/+/g, RefCLEF, gRefCOCO, ReasonSeg, and
-COCO-Interactive. Training splits can write masks and training JSONL together;
+`prepare_binary.py` handles RefCOCO/+/g, RefCLEF, gRefCOCO, ReasonSeg,
+COCO-Interactive, DOORS, and VIS2022. The DOORS and VIS2022 subcommands fix
+their source split, filtering, and output layout in code; users only select the
+dataset root. Training splits can write masks and training JSONL together;
 benchmark splits can prepare masks without replacing released benchmark JSONL.
 
 ```bash
@@ -43,6 +45,21 @@ python tools/data_prepare/segmentation/prepare_semantic.py --help
 
 `check_reusable_data.sh` checks whether an extracted directory or a valid local
 archive can satisfy a required data path before another download is attempted.
+
+## Dataset-Specific Binary Training Data
+
+After downloading and arranging the original data as described in
+[`docs/train_data_prepare.md`](../../../docs/train_data_prepare.md), run:
+
+```bash
+python tools/data_prepare/segmentation/prepare_binary.py doors
+python tools/data_prepare/segmentation/prepare_binary.py vis2022 --num-workers 8
+```
+
+The DOORS command reuses the original DS1 training masks and writes
+`seg_binary_doors.jsonl`. The VIS2022 command creates category-level binary
+masks under `train/BINARYMasks/` and writes `seg_binary_vis2022.jsonl`. Both
+JSONL files are placed under `jsonl_generate/train_jsonls/segmentation/`.
 
 ## Additional Source Formats
 
@@ -70,47 +87,8 @@ python tools/data_prepare/segmentation/converters/coco_to_binary.py \
   --num-workers 4
 ```
 
-### Structured Annotations
-
-Use `structured_to_coco.py` to normalize structured video or track annotations
-before the COCO-to-binary stage. VOS2022 is the configured representative case.
-
-```bash
-python tools/data_prepare/segmentation/converters/structured_to_coco.py \
-  --dataset VOS2022 \
-  --data-root /path/to/datasets/VOS2022 \
-  --source train/instances.json \
-  --output ./coco_annotations/VOS2022/coco_annotation.json
-
-python tools/data_prepare/segmentation/converters/coco_to_binary.py \
-  --dataset VOS2022 \
-  --data-root /path/to/datasets/VOS2022 \
-  --ann ./coco_annotations/VOS2022/coco_annotation.json \
-  --dst-dir VOS2022_masks \
-  --output-dir ./jsonl_generate_ref \
-  --num-workers 4
-```
-
-### Image and Mask Directories
-
-Use `masks_to_coco.py` when a dataset provides images and masks but no COCO
-annotation file. DOORS is the configured representative case.
-
-```bash
-python tools/data_prepare/segmentation/converters/masks_to_coco.py \
-  --dataset DOORS \
-  --data-root /path/to/datasets/DOORS \
-  --output ./coco_annotations/DOORS/coco_annotation.json
-
-python tools/data_prepare/segmentation/converters/coco_to_binary.py \
-  --dataset DOORS \
-  --data-root /path/to/datasets/DOORS \
-  --ann ./coco_annotations/DOORS/coco_annotation.json \
-  --dst-dir DOORS_mask \
-  --output-dir ./jsonl_generate_ref \
-  --num-workers 4
-```
-
-The representative converters do not imply support for every dataset with a
-similar annotation type. Add dataset-specific parsing and path rules before
-documenting another dataset as supported.
+`masks_to_coco.py` and `structured_to_coco.py` are lower-level normalization
+helpers for contributor use. They are not alternate public preparation paths
+for DOORS or VIS2022. The high-level commands above own the validated split,
+mask, prompt, and JSONL contracts. A similar source format does not imply that
+another dataset is supported without dataset-specific parsing and validation.

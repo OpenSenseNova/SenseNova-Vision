@@ -27,6 +27,7 @@
 
 ## 📣 最新动态
 
+- `[2026.07.22]` 完善了[训练数据准备全流程](./docs/train_data_prepare.md)。
 - `[2026.07.17]` 发布适配开源数据的[训练流程](./docs/TRAIN.md)。
 - `[2026.07.17]` 新增多视角重建和相机位姿估计的[基准测试与评测支持](./docs/EVAL.md)。
 - `[2026.07.08]` 发布 [SenseNova-Vision-Corpus-50M](https://huggingface.co/datasets/sensenova/SenseNova-Vision-Corpus-50M) 数据集。

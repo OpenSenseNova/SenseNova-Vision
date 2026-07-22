@@ -133,12 +133,6 @@ DATASET_CONFIG = {
     "vizwiz": dict(
         img="images",
     ),
-    "DOORS": dict(
-        img="./",
-    ),
-    "VOS2022": dict(
-        img="train/JPEGImages",
-    ),
 }
 
 
@@ -175,7 +169,9 @@ def read_mask_from_path(path):
 
 def decode_rle_mask(rle_obj):
     if isinstance(rle_obj.get("counts"), list):
-        rle_obj = mask_utils.frPyObjects(rle_obj, rle_obj["size"][0], rle_obj["size"][1])
+        rle_obj = mask_utils.frPyObjects(
+            rle_obj, rle_obj["size"][0], rle_obj["size"][1]
+        )
     mask = mask_utils.decode(rle_obj)
     if mask.ndim == 3:
         mask = np.any(mask, axis=2)
@@ -185,7 +181,8 @@ def decode_rle_mask(rle_obj):
 def decode_segmentation_mask(segmentation, height, width):
     if isinstance(segmentation, list):
         valid_polygons = [
-            poly for poly in segmentation
+            poly
+            for poly in segmentation
             if isinstance(poly, list) and len(poly) >= 6 and len(poly) % 2 == 0
         ]
         if not valid_polygons:
@@ -210,7 +207,9 @@ def merge_masks(mask_list):
     return merged
 
 
-def extract_masks_from_instance_annotations(anns, cat_id2name, is_thing_map, height, width):
+def extract_masks_from_instance_annotations(
+    anns, cat_id2name, is_thing_map, height, width
+):
     masks_by_name = defaultdict(list)
     positive_names = set()
 
@@ -230,7 +229,9 @@ def extract_masks_from_instance_annotations(anns, cat_id2name, is_thing_map, hei
         if mask is not None:
             masks_by_name[cat_name].append(mask)
 
-    merged_masks = {name: merge_masks(mask_list) for name, mask_list in masks_by_name.items()}
+    merged_masks = {
+        name: merge_masks(mask_list) for name, mask_list in masks_by_name.items()
+    }
     return positive_names, merged_masks
 
 
@@ -250,7 +251,9 @@ def extract_masks_from_image_annotation(ann, cat_id2name, is_thing_map):
         if cat_name is not None and is_thing_map.get(cat_id, 1):
             positive_names.add(cat_name)
 
-    merged_masks = {name: merge_masks(mask_list) for name, mask_list in masks_by_name.items()}
+    merged_masks = {
+        name: merge_masks(mask_list) for name, mask_list in masks_by_name.items()
+    }
     return positive_names, merged_masks
 
 
@@ -295,7 +298,9 @@ def build_mask_path_candidates(binary_map_folder, image_file, cat_name, data_typ
 
 
 def resolve_mask_path(binary_map_folder, image_file, cat_name, data_type=None):
-    candidates = build_mask_path_candidates(binary_map_folder, image_file, cat_name, data_type=data_type)
+    candidates = build_mask_path_candidates(
+        binary_map_folder, image_file, cat_name, data_type=data_type
+    )
     for path in candidates:
         if is_remote_path(path):
             raise ValueError(f"Remote paths are not supported: {path}")
@@ -319,7 +324,9 @@ def prepare_output_image_path(image_path, data_type):
     return image_path
 
 
-def find_top_level_array_offset(json_path, key, chunk_size=64 * 1024 * 1024, show_progress=False):
+def find_top_level_array_offset(
+    json_path, key, chunk_size=64 * 1024 * 1024, show_progress=False
+):
     needle = f'"{key}"'.encode("utf-8")
     lookahead = len(needle) + 32
 
@@ -361,7 +368,7 @@ def find_top_level_array_offset(json_path, key, chunk_size=64 * 1024 * 1024, sho
 
                     if cursor >= len(buf):
                         break
-                    if buf[cursor:cursor + 1] != b":":
+                    if buf[cursor : cursor + 1] != b":":
                         search_pos = idx + 1
                         continue
 
@@ -371,7 +378,7 @@ def find_top_level_array_offset(json_path, key, chunk_size=64 * 1024 * 1024, sho
 
                     if cursor >= len(buf):
                         break
-                    if buf[cursor:cursor + 1] == b"[":
+                    if buf[cursor : cursor + 1] == b"[":
                         return base_offset + cursor
 
                     search_pos = idx + 1
@@ -391,7 +398,9 @@ def iter_json_array_from_offset(json_path, array_offset, chunk_size=8 * 1024 * 1
         with io.TextIOWrapper(raw_f, encoding="utf-8") as text_f:
             opener = text_f.read(1)
             if opener != "[":
-                raise ValueError(f"Expected '[' at offset {array_offset} in {json_path}, got {opener!r}")
+                raise ValueError(
+                    f"Expected '[' at offset {array_offset} in {json_path}, got {opener!r}"
+                )
 
             buffer = ""
             eof = False
@@ -426,21 +435,35 @@ def iter_json_array_from_offset(json_path, array_offset, chunk_size=8 * 1024 * 1
                 if eof:
                     if buffer.strip() in {"", "]"}:
                         return
-                    raise ValueError(f"Unexpected trailing content while parsing {json_path}")
+                    raise ValueError(
+                        f"Unexpected trailing content while parsing {json_path}"
+                    )
 
 
-def iter_top_level_array(json_path, key, chunk_size=8 * 1024 * 1024, show_scan_progress=False):
-    array_offset = find_top_level_array_offset(json_path, key, show_progress=show_scan_progress)
+def iter_top_level_array(
+    json_path, key, chunk_size=8 * 1024 * 1024, show_scan_progress=False
+):
+    array_offset = find_top_level_array_offset(
+        json_path, key, show_progress=show_scan_progress
+    )
     if array_offset is None:
         return
-    yield from iter_json_array_from_offset(json_path, array_offset, chunk_size=chunk_size)
+    yield from iter_json_array_from_offset(
+        json_path, array_offset, chunk_size=chunk_size
+    )
 
 
 def load_categories_streaming(json_path, show_scan_progress=False):
-    categories = list(iter_top_level_array(json_path, "categories", show_scan_progress=show_scan_progress))
+    categories = list(
+        iter_top_level_array(
+            json_path, "categories", show_scan_progress=show_scan_progress
+        )
+    )
     if categories:
         cat_id2name = {cat["id"]: cat["name"] for cat in categories}
-        is_thing_map = {cat["id"]: cat.get("isthing", cat.get("is_thing", 1)) for cat in categories}
+        is_thing_map = {
+            cat["id"]: cat.get("isthing", cat.get("is_thing", 1)) for cat in categories
+        }
     else:
         cat_id2name = {cat["id"]: cat["name"] for cat in COCO_CATEGORIES}
         is_thing_map = {cat["id"]: cat.get("isthing", 1) for cat in COCO_CATEGORIES}
@@ -452,8 +475,12 @@ def load_categories_streaming(json_path, show_scan_progress=False):
 
 
 def iter_streaming_instance_items(json_path, show_scan_progress=False):
-    image_iter = iter_top_level_array(json_path, "images", show_scan_progress=show_scan_progress)
-    ann_iter = iter_top_level_array(json_path, "annotations", show_scan_progress=show_scan_progress)
+    image_iter = iter_top_level_array(
+        json_path, "images", show_scan_progress=show_scan_progress
+    )
+    ann_iter = iter_top_level_array(
+        json_path, "annotations", show_scan_progress=show_scan_progress
+    )
     current_ann = next(ann_iter, None)
 
     for img in image_iter:
@@ -482,13 +509,17 @@ def iter_streaming_instance_items(json_path, show_scan_progress=False):
         }
 
     if current_ann is not None:
-        raise RuntimeError("Annotations remain after images are exhausted; image/annotation ordering is inconsistent.")
+        raise RuntimeError(
+            "Annotations remain after images are exhausted; image/annotation ordering is inconsistent."
+        )
 
 
 def is_annotation_image_id_monotonic(json_path, show_progress=False):
     """Check whether annotations are non-decreasing by image_id (required by strict streaming parser)."""
     prev_image_id = None
-    ann_iter = iter_top_level_array(json_path, "annotations", show_scan_progress=show_progress)
+    ann_iter = iter_top_level_array(
+        json_path, "annotations", show_scan_progress=show_progress
+    )
     if show_progress:
         ann_iter = tqdm(ann_iter, desc="check_ann_order", unit="ann")
 
@@ -519,7 +550,9 @@ def build_items_non_streaming(data_path):
 
     if categories:
         cat_id2name = {cat["id"]: cat["name"] for cat in categories}
-        is_thing_map = {cat["id"]: cat.get("isthing", cat.get("is_thing", 1)) for cat in categories}
+        is_thing_map = {
+            cat["id"]: cat.get("isthing", cat.get("is_thing", 1)) for cat in categories
+        }
     else:
         cat_id2name = {cat["id"]: cat["name"] for cat in COCO_CATEGORIES}
         is_thing_map = {cat["id"]: cat.get("isthing", 1) for cat in COCO_CATEGORIES}
@@ -530,10 +563,9 @@ def build_items_non_streaming(data_path):
     items = []
     sample_ann = annotations[0] if annotations else {}
     is_instance_dataset = bool(
-        images and annotations and (
-            "segmentation" in sample_ann or
-            "sam_mask" in sample_ann
-        )
+        images
+        and annotations
+        and ("segmentation" in sample_ann or "sam_mask" in sample_ann)
     )
     is_video_instance_dataset = bool(
         videos and annotations and ("segmentations" in sample_ann)
@@ -551,10 +583,12 @@ def build_items_non_streaming(data_path):
             for frame_idx, segmentation in enumerate(segmentations):
                 if segmentation is None:
                     continue
-                anns_by_video_frame[(video_id, frame_idx)].append({
-                    "category_id": ann.get("category_id"),
-                    "segmentation": segmentation,
-                })
+                anns_by_video_frame[(video_id, frame_idx)].append(
+                    {
+                        "category_id": ann.get("category_id"),
+                        "segmentation": segmentation,
+                    }
+                )
 
         for video_id, video in vid_id2meta.items():
             file_names = video.get("file_names", [])
@@ -562,14 +596,16 @@ def build_items_non_streaming(data_path):
                 frame_anns = anns_by_video_frame.get((video_id, frame_idx), [])
                 if not frame_anns:
                     continue
-                items.append({
-                    "mode": "instance",
-                    "video_id": video_id,
-                    "file_name": file_name,
-                    "height": video.get("height"),
-                    "width": video.get("width"),
-                    "anns": frame_anns,
-                })
+                items.append(
+                    {
+                        "mode": "instance",
+                        "video_id": video_id,
+                        "file_name": file_name,
+                        "height": video.get("height"),
+                        "width": video.get("width"),
+                        "anns": frame_anns,
+                    }
+                )
     elif is_instance_dataset:
         img_id2meta = {img["id"]: img for img in images}
         anns_by_image = defaultdict(list)
@@ -577,28 +613,32 @@ def build_items_non_streaming(data_path):
             anns_by_image[ann["image_id"]].append(ann)
 
         for image_id, img in img_id2meta.items():
-            items.append({
-                "mode": "instance",
-                "image_id": image_id,
-                "file_name": img["file_name"],
-                "height": img.get("height"),
-                "width": img.get("width"),
-                "anns": anns_by_image.get(image_id, []),
-            })
+            items.append(
+                {
+                    "mode": "instance",
+                    "image_id": image_id,
+                    "file_name": img["file_name"],
+                    "height": img.get("height"),
+                    "width": img.get("width"),
+                    "anns": anns_by_image.get(image_id, []),
+                }
+            )
     else:
         img_id2file = {img["id"]: img["file_name"] for img in images} if images else {}
         for ann in annotations:
             file_name = ann.get("file_name") or img_id2file.get(ann["image_id"])
             if file_name is None:
                 raise KeyError(f"Cannot resolve file_name for annotation: {ann}")
-            items.append({
-                "mode": "image",
-                "image_id": ann["image_id"],
-                "file_name": file_name,
-                "height": ann.get("height"),
-                "width": ann.get("width"),
-                "ann": ann,
-            })
+            items.append(
+                {
+                    "mode": "image",
+                    "image_id": ann["image_id"],
+                    "file_name": file_name,
+                    "height": ann.get("height"),
+                    "width": ann.get("width"),
+                    "ann": ann,
+                }
+            )
 
     return cat_id2name, is_thing_map, items
 
@@ -611,8 +651,17 @@ def write_results(result, out_files, line_counts):
             line_counts[key] += 1
 
 
-def process_annotation(item, cat_id2name, is_thing_map, image_folder, binary_mask_folder,
-                       data_root, data_type, min_ratio=0.01, max_ratio=0.5):
+def process_annotation(
+    item,
+    cat_id2name,
+    is_thing_map,
+    image_folder,
+    binary_mask_folder,
+    data_root,
+    data_type,
+    min_ratio=0.01,
+    max_ratio=0.5,
+):
     """Process one image, reusing or creating binary masks in dst_dir."""
     image_file = item["file_name"]
     image_path = os.path.join(image_folder, image_file) if image_folder else image_file
@@ -647,13 +696,17 @@ def process_annotation(item, cat_id2name, is_thing_map, image_folder, binary_mas
     has_positive_source = bool(generated_masks)
     if not has_positive_source:
         for cat_name in positive_names:
-            src_mask_path = resolve_mask_path(binary_mask_folder, image_file, cat_name, data_type=data_type)
+            src_mask_path = resolve_mask_path(
+                binary_mask_folder, image_file, cat_name, data_type=data_type
+            )
             if read_mask_from_path(src_mask_path) is not None:
                 has_positive_source = True
                 break
 
     if positive_names and not has_positive_source:
-        raise ValueError(f"No existing binary or decodable mask found for: {image_file}")
+        raise ValueError(
+            f"No existing binary or decodable mask found for: {image_file}"
+        )
 
     # ---------------- Binary JSONL ----------------
     for cat_id, cat_name in cat_id2name.items():
@@ -664,8 +717,12 @@ def process_annotation(item, cat_id2name, is_thing_map, image_folder, binary_mas
         if generated_mask is None and cat_name not in positive_names:
             continue
 
-        src_mask_path = resolve_mask_path(binary_mask_folder, image_file, cat_name, data_type=data_type)
-        dst_mask_path = resolve_mask_path(binary_mask_folder, image_file, cat_name, data_type=data_type)
+        src_mask_path = resolve_mask_path(
+            binary_mask_folder, image_file, cat_name, data_type=data_type
+        )
+        dst_mask_path = resolve_mask_path(
+            binary_mask_folder, image_file, cat_name, data_type=data_type
+        )
 
         mask, output_mask_path = load_or_create_mask(
             src_mask_path,
@@ -682,15 +739,17 @@ def process_annotation(item, cat_id2name, is_thing_map, image_folder, binary_mas
         if not (min_ratio <= ratio <= max_ratio):
             continue
 
-        question = random.choice(MASK_QUESTION_LIST).format(categories=tag_categories([cat_name]), task_type="binary")
+        question = random.choice(MASK_QUESTION_LIST).format(
+            categories=tag_categories([cat_name]), task_type="binary"
+        )
         answer = random.choice(MASK_ANSWER_LIST)
         binary_item = {
             "image": to_output_path(output_image_path, data_root),
             "conversations": [
                 {"from": "human", "value": DEFAULT_IMAGE_TOKEN + question},
-                {"from": "gpt", "value": answer}
+                {"from": "gpt", "value": answer},
             ],
-            "seg": to_output_path(output_mask_path, data_root)
+            "seg": to_output_path(output_mask_path, data_root),
         }
         results["binary"].append(json.dumps(binary_item))
 
@@ -711,7 +770,7 @@ def main():
     parser.add_argument(
         "--dataset",
         type=str,
-        help="Dataset key to convert: vizwiz, DOORS, or VOS2022.",
+        help="Dataset key to convert. Use --list-datasets to inspect presets.",
     )
     parser.add_argument(
         "--data-root",
@@ -735,9 +794,15 @@ def main():
         default="./jsonl_generate_ref",
         help="Output directory for generated JSONL files.",
     )
-    parser.add_argument("--num-workers", type=int, default=None, help="Number of worker processes.")
-    parser.add_argument("--min-ratio", type=float, default=0.01, help="Minimum mask area ratio.")
-    parser.add_argument("--max-ratio", type=float, default=1.0, help="Maximum mask area ratio.")
+    parser.add_argument(
+        "--num-workers", type=int, default=None, help="Number of worker processes."
+    )
+    parser.add_argument(
+        "--min-ratio", type=float, default=0.01, help="Minimum mask area ratio."
+    )
+    parser.add_argument(
+        "--max-ratio", type=float, default=1.0, help="Maximum mask area ratio."
+    )
     args = parser.parse_args()
 
     if args.list_datasets:
@@ -754,7 +819,9 @@ def main():
 
     dataset = args.dataset
     if dataset not in DATASET_CONFIG:
-        parser.error(f"unknown dataset {dataset!r}. Use --list-datasets to see supported keys.")
+        parser.error(
+            f"unknown dataset {dataset!r}. Use --list-datasets to see supported keys."
+        )
 
     dataset_cfg = DATASET_CONFIG[dataset]
     data_root = args.data_root
@@ -780,23 +847,30 @@ def main():
         f"[INFO] dataset={dataset}, data_path={data_path}, "
         f"num_workers={args.num_workers}"
     )
-    log(
-        f"[INFO] image_folder={image_folder}, binary_mask_folder={binary_mask_folder}"
-    )
+    log(f"[INFO] image_folder={image_folder}, binary_mask_folder={binary_mask_folder}")
 
     out_paths = {
         "binary": os.path.join(args.output_dir, f"seg_binary_{dataset}.jsonl"),
     }
 
-    log("[INFO] Using non-streaming parser (will load full annotation JSON into memory).")
+    log(
+        "[INFO] Using non-streaming parser (will load full annotation JSON into memory)."
+    )
     cat_id2name, is_thing_map, items = build_items_non_streaming(data_path)
     item_iter = iter(items)
     total_items = len(items)
 
     task_iter = (
         (
-            item, cat_id2name, is_thing_map, image_folder, binary_mask_folder,
-            data_root, dataset, args.min_ratio, args.max_ratio
+            item,
+            cat_id2name,
+            is_thing_map,
+            image_folder,
+            binary_mask_folder,
+            data_root,
+            dataset,
+            args.min_ratio,
+            args.max_ratio,
         )
         for item in item_iter
     )
@@ -805,8 +879,7 @@ def main():
 
     with ExitStack() as stack:
         out_files = {
-            key: stack.enter_context(open(path, "w"))
-            for key, path in out_paths.items()
+            key: stack.enter_context(open(path, "w")) for key, path in out_paths.items()
         }
 
         if args.num_workers == 1:
@@ -826,5 +899,5 @@ def main():
         log(f"{k} -> {line_counts[k]} lines -> {path}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

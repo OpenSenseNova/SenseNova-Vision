@@ -1,3 +1,5 @@
+# Copyright (c) 2026 SenseTime Group Inc. and/or its affiliates.
+
 import argparse
 import json
 import os
@@ -98,7 +100,9 @@ def eval_7scenes(model, params, *, data_root, output_dir, total_test_length):
     with id_map_path.open() as f:
         seq_id_map = json.load(f)
     if total_test_length:
-        seq_id_map = {k: v for i, (k, v) in enumerate(seq_id_map.items()) if i < total_test_length}
+        seq_id_map = {
+            k: v for i, (k, v) in enumerate(seq_id_map.items()) if i < total_test_length
+        }
 
     for seq_name, ids in tqdm.tqdm(seq_id_map.items()):
         images = []
@@ -126,7 +130,9 @@ def eval_eth3d(model, params, *, data_root, output_dir, total_test_length):
     with id_map_path.open() as f:
         seq_id_map = json.load(f)
     if total_test_length:
-        seq_id_map = {k: v for i, (k, v) in enumerate(seq_id_map.items()) if i < total_test_length}
+        seq_id_map = {
+            k: v for i, (k, v) in enumerate(seq_id_map.items()) if i < total_test_length
+        }
 
     metadata = {}
     for seq in sorted(d.name for d in dataset_dir.iterdir() if d.is_dir()):
@@ -152,19 +158,20 @@ def eval_eth3d(model, params, *, data_root, output_dir, total_test_length):
             )
 
 
-def eval_dtu(model, params, * data_root, output_dir, total_test_length):
+def eval_dtu(model, params, *data_root, output_dir, total_test_length):
     dataset_dir = Path(data_root) / TASKS["dtu"]["dataset_dir"]
     id_map_path = Path(TASKS["dtu"]["id_map"])
 
     with id_map_path.open() as f:
         seq_id_map = json.load(f)
     if total_test_length:
-        seq_id_map = {k: v for i, (k, v) in enumerate(seq_id_map.items()) if i < total_test_length}
+        seq_id_map = {
+            k: v for i, (k, v) in enumerate(seq_id_map.items()) if i < total_test_length
+        }
 
     for seq_name, ids in tqdm.tqdm(seq_id_map.items()):
         image_paths = [
-            str(dataset_dir / seq_name / "images" / f"{i:08d}.jpg")
-            for i in ids
+            str(dataset_dir / seq_name / "images" / f"{i:08d}.jpg") for i in ids
         ]
 
         output = model.reconstruct_3d(

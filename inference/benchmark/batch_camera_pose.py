@@ -1,3 +1,5 @@
+# Copyright (c) 2026 SenseTime Group Inc. and/or its affiliates.
+
 import argparse
 import json
 import os
@@ -31,13 +33,23 @@ TASKS = {
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="SenseNova-Vision camera pose benchmark")
+    parser = argparse.ArgumentParser(
+        description="SenseNova-Vision camera pose benchmark"
+    )
     parser.add_argument("--model_path", default="sensenova/SenseNova-Vision-7B-MoT")
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--dataset", choices=TASKS.keys(), required=True)
-    parser.add_argument("--data_root", default="datas/multiview3d_data", help="Root directory for test datasets.")
+    parser.add_argument(
+        "--data_root",
+        default="datas/multiview3d_data",
+        help="Root directory for test datasets.",
+    )
     parser.add_argument("--output_dir", default=None)
-    parser.add_argument("--total_test_length", type=int, help="Limit the number of samples per dataset (for debug only).")
+    parser.add_argument(
+        "--total_test_length",
+        type=int,
+        help="Limit the number of samples per dataset (for debug only).",
+    )
     return parser.parse_args()
 
 
@@ -60,7 +72,11 @@ def main():
     with open(task["id_map"], "r") as f:
         seq_map = json.load(f)
     if args.total_test_length:
-        seq_map = {k: v for i, (k, v) in enumerate(seq_map.items()) if i < args.total_test_length}
+        seq_map = {
+            k: v
+            for i, (k, v) in enumerate(seq_map.items())
+            if i < args.total_test_length
+        }
 
     model = SenseNovaVisionModel(model_path=args.model_path, device=args.device)
 

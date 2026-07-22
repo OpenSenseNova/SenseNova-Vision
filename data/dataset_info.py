@@ -548,238 +548,249 @@ DATASET_INFO = {
             "num_total_samples": 3433232,
         },
         "DOORS": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "ref_seg_data", "DOORS"),
             "jsonl_path": "",
             "num_total_samples": 30105,
         },
         "NDISPark": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "ref_seg_data", "NDISPark"),
             "jsonl_path": "",
             "num_total_samples": 112,
         },
         "MinneApple": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "ref_seg_data", "MinneApple"),
             "jsonl_path": "",
             "num_total_samples": 497,
         },
         "EYTH": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "ref_seg_data", "EYTH"),
             "jsonl_path": "",
             "num_total_samples": 330,
         },
         "PST900": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "ref_seg_data", "PST900"),
             "jsonl_path": "",
             "num_total_samples": 345,
         },
         "PSTRGB": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "ref_seg_data", "PSTRGB"),
             "jsonl_path": "",
             "num_total_samples": 1426,
         },
         "SUIM": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "ref_seg_data", "SUIM"),
             "jsonl_path": "",
             "num_total_samples": 4510,
         },
         "MyFood": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "ref_seg_data", "MyFood"),
             "jsonl_path": "",
             "num_total_samples": 1000,
         },
         "CO-SKEL": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "ref_seg_data", "CO-SKEL"),
             "jsonl_path": "",
             "num_total_samples": 348,
         },
         "VIS2022": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "ref_seg_data", "VIS2022"),
             "jsonl_path": "",
             "num_total_samples": 97318,
         },
         "MVTecD2S": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "ref_seg_data", "MVTecD2S"),
             "jsonl_path": "",
             "num_total_samples": 4470,
         },
         "VizWiz-FewShot": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "ref_seg_data", "VizWiz-FewShot"),
             "jsonl_path": "",
             "num_total_samples": 6386,
         },
         "Trans10K": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "ref_seg_data", "Trans10K"),
             "jsonl_path": "",
             "num_total_samples": 5094,
         },
         "CIHP": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "ref_seg_data", "CIHP"),
             "jsonl_path": "",
             "num_total_samples": 160993,
         },
         "ATR": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "ref_seg_data", "ATR"),
             "jsonl_path": "",
             "num_total_samples": 91075,
         },
         "LIP": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "ref_seg_data", "LIP"),
             "jsonl_path": "",
             "num_total_samples": 146916,
         },
         "FAT-single": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "ref_seg_data", "FAT"),
             "jsonl_path": "",
             "num_total_samples": 26897,
         },
         "FAT-mixed": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "ref_seg_data", "FAT"),
             "jsonl_path": "",
             "num_total_samples": 127200,
         },
         "Fashionpedia": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "ref_seg_data", "Fashionpedia"),
             "jsonl_path": "",
             "num_total_samples": 125976,
         },
         "PartImageNet": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "ref_seg_data", "PartImageNet"),
             "jsonl_path": "",
             "num_total_samples": 51626,
         },
         "PartImageNet-Whole": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "ref_seg_data", "PartImageNet"),
             "jsonl_path": "",
             "num_total_samples": 493713,
         },
         "WaterOVS": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "ref_seg_data", "WaterOVS"),
             "jsonl_path": "",
             "num_total_samples": 5690,
         },
         "RaidaR-rainy": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "ref_seg_data", "RaidaR"),
             "jsonl_path": "",
             "num_total_samples": 1510,
         },
         "RaidaR-sunny": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "ref_seg_data", "RaidaR"),
             "jsonl_path": "",
             "num_total_samples": 939,
         },
         "FSS-1000": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "ref_seg_data", "FSS-1000"),
             "jsonl_path": "",
             "num_total_samples": 9956,
         },
         "DAVIS": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "ref_seg_data", "DAVIS"),
             "jsonl_path": "",
             "num_total_samples": 3968,
         },
         "OCID": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "ref_seg_data", "OCID-VLG"),
             "jsonl_path": "",
             "num_total_samples": 6497,
         },
         "PIC": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "ref_seg_data", "PIC"),
             "jsonl_path": "",
             "num_total_samples": 53960,
         },
         "LaPa": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "ref_seg_data", "LaPa"),
             "jsonl_path": "",
             "num_total_samples": 46998,
         },
         "DeepFashion2": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "ref_seg_data", "DeepFashion2"),
             "jsonl_path": "",
             "num_total_samples": 308056,
         },
         "MattingHumanHalf": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "ref_seg_data", "MattingHumanHalf"),
             "jsonl_path": "",
             "num_total_samples": 34426,
         },
     },
     "vlm_sft": {
         "llava_v1_5": {
-            "data_dir": "",
-            "jsonl_path": "",
+            "data_dir": os.path.join(DATA_ROOT, "train_data", "llava_images"),
+            "jsonl_path": os.path.join(
+                TRAIN_JSONL_ROOT,
+                "understanding/llava_v1_5_mix665k.jsonl",
+            ),
             "num_total_samples": 624254,
         },
         "finevision_image": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "train_data", "finevision_source"),
             "jsonl_path": "",
             "num_total_samples": 5893201,
         },
         "finevision_multi_image": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "train_data", "finevision_source"),
             "jsonl_path": "",
             "num_total_samples": 131932,
         },
         "mammoth_image": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "train_data", "mammoth_vl_source"),
             "jsonl_path": "",
             "num_total_samples": 8956368,
         },
         "mammoth_text": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "train_data", "mammoth_vl_source"),
             "jsonl_path": "",
             "num_total_samples": 921269,
         },
         "finevision_text": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "train_data", "finevision_source"),
             "jsonl_path": "",
             "num_total_samples": 9426088,
         },
     },
     "t2i_general": {
         "BLIP3o-Pretrain-Long-Caption": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "train_data", "blip3o", "long_caption"),
             "jsonl_path": "",
             "num_total_samples": 6847620,
         },
         "BLIP3o-Pretrain-Short-Caption": {
-            "data_dir": "",
+            "data_dir": os.path.join(
+                DATA_ROOT, "train_data", "blip3o", "short_caption"
+            ),
             "jsonl_path": "",
             "num_total_samples": 2386046,
         },
         "BLIP3o-Long-part2": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "train_data", "blip3o", "long_caption"),
             "jsonl_path": "",
             "num_total_samples": 12809032,
         },
     },
     "general_edit": {
         "Nano-consistent-150k": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "train_data", "nano_consistent_150k"),
             "jsonl_path": "",
             "num_total_samples": 123268,
         },
         "multi_edit": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "train_data", "multiedit"),
             "jsonl_path": "",
             "num_total_samples": 106532,
         },
         "ShareGPT_4o_edit": {
-            "data_dir": "",
+            "data_dir": os.path.join(DATA_ROOT, "train_data", "sharegpt_4o"),
             "jsonl_path": "",
             "num_total_samples": 46539,
         },
         "GPT_Image_Edit_OmniEdit": {
-            "data_dir": "",
+            "data_dir": os.path.join(
+                DATA_ROOT, "train_data", "gpt_image_edit", "gpt-edit"
+            ),
             "jsonl_path": "",
             "num_total_samples": 1270385,
         },
         "GPT_Image_Edit_HQEdit": {
-            "data_dir": "",
+            "data_dir": os.path.join(
+                DATA_ROOT, "train_data", "gpt_image_edit", "gpt-edit"
+            ),
             "jsonl_path": "",
             "num_total_samples": 183182,
         },
         "GPT_Image_Edit_UltraEdit": {
-            "data_dir": "",
+            "data_dir": os.path.join(
+                DATA_ROOT, "train_data", "gpt_image_edit", "gpt-edit"
+            ),
             "jsonl_path": "",
             "num_total_samples": 100008,
         },
@@ -799,32 +810,68 @@ DATASET_INFO = {
             "num_total_samples": 61432,
         },
         "vkitti_depth": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "vkitti_depth"),
+                "output_dir": os.path.join(
+                    DATA_ROOT, "dense_geometric_prediction", "vkitti_depth"
+                ),
+            },
             "jsonl_path": "",
             "num_total_samples": 17008,
         },
         "IRS_depth": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "IRS"),
+                "output_dir": os.path.join(
+                    DATA_ROOT, "dense_geometric_prediction", "IRS_depth"
+                ),
+            },
             "jsonl_path": "",
             "num_total_samples": 24614,
         },
         "tartanair_depth": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "tartanair"),
+                "output_dir": os.path.join(
+                    DATA_ROOT, "dense_geometric_prediction", "tartanair_depth"
+                ),
+            },
             "jsonl_path": "",
             "num_total_samples": 42521,
         },
         "tartanair_addition_depth": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "tartanair"),
+                "output_dir": os.path.join(
+                    DATA_ROOT,
+                    "dense_geometric_prediction",
+                    "tartanair_addition_depth",
+                ),
+            },
             "jsonl_path": "",
             "num_total_samples": 75514,
         },
         "IRS_addition_depth": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "IRS"),
+                "output_dir": os.path.join(
+                    DATA_ROOT, "dense_geometric_prediction", "IRS_addition_depth"
+                ),
+            },
             "jsonl_path": "",
             "num_total_samples": 49236,
         },
         "scenenet_rgbd_depth": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(
+                    DATA_ROOT, "train_data", "ScenenetRGBD", "train"
+                ),
+                "output_dir": os.path.join(
+                    DATA_ROOT,
+                    "dense_geometric_prediction",
+                    "scenenet_rgbd_depth",
+                ),
+            },
             "jsonl_path": "",
             "num_total_samples": 2273316,
         },
@@ -899,22 +946,46 @@ DATASET_INFO = {
             "num_total_samples": 72655,
         },
         "interiorverse_normal": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "InteriorVerse_85"),
+                "output_dir": os.path.join(
+                    DATA_ROOT,
+                    "dense_geometric_prediction",
+                    "interiorverse_normal",
+                ),
+            },
             "jsonl_path": "",
             "num_total_samples": 26557,
         },
         "IRS_normal": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "IRS"),
+                "output_dir": os.path.join(
+                    DATA_ROOT, "dense_geometric_prediction", "IRS_normal"
+                ),
+            },
             "jsonl_path": "",
             "num_total_samples": 34439,
         },
         "tartanair_normal": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "tartanair"),
+                "output_dir": os.path.join(
+                    DATA_ROOT, "dense_geometric_prediction", "tartanair_normal"
+                ),
+            },
             "jsonl_path": "",
             "num_total_samples": 117855,
         },
         "IRS_addition_normal": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "IRS"),
+                "output_dir": os.path.join(
+                    DATA_ROOT,
+                    "dense_geometric_prediction",
+                    "IRS_addition_normal",
+                ),
+            },
             "jsonl_path": "",
             "num_total_samples": 68877,
         },
@@ -941,7 +1012,16 @@ DATASET_INFO = {
             "num_total_samples": 4462151,
         },
         "scenenet_rgbd_normal": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(
+                    DATA_ROOT, "train_data", "ScenenetRGBD", "train"
+                ),
+                "output_dir": os.path.join(
+                    DATA_ROOT,
+                    "dense_geometric_prediction",
+                    "scenenet_rgbd_normal",
+                ),
+            },
             "jsonl_path": "",
             "num_total_samples": 2379750,
         },
@@ -997,7 +1077,9 @@ DATASET_INFO = {
             "num_total_samples": 28471,
         },
         "DeepFashion_detect": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "DeepFashion")
+            },
             "jsonl_path": "",
             "num_total_samples": 191961,
         },
@@ -1010,12 +1092,16 @@ DATASET_INFO = {
             "num_total_samples": 78895,
         },
         "HumanParts_detect": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "HumanParts")
+            },
             "jsonl_path": "",
             "num_total_samples": 12000,
         },
         "ImageNetPart_detect": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "ImageNetPart")
+            },
             "jsonl_path": "",
             "num_total_samples": 16523,
         },
@@ -1052,7 +1138,7 @@ DATASET_INFO = {
     },
     "cv_detection_point": {
         "pixmo_pointing": {
-            "data_dir": "",
+            "data_dir": {"input_dir": os.path.join(DATA_ROOT, "train_data", "pixmo")},
             "jsonl_path": "",
             "num_total_samples": 1704004,
         },
@@ -1123,9 +1209,7 @@ DATASET_INFO = {
             "num_total_samples": 10365,
         },
         "PACO_LVIS_pointing": {
-            "data_dir": {
-                "input_dir": os.path.join(DATA_ROOT, "train_data", "PACO")
-            },
+            "data_dir": {"input_dir": os.path.join(DATA_ROOT, "train_data", "PACO")},
             "jsonl_path": os.path.join(
                 TRAIN_JSONL_ROOT,
                 "structure_view_understanding/PACO_total_unified_point_und.jsonl",
@@ -1197,7 +1281,7 @@ DATASET_INFO = {
     },
     "cv_detection_bbox_dense": {
         "Locount_detect": {
-            "data_dir": "",
+            "data_dir": {"input_dir": os.path.join(DATA_ROOT, "train_data", "Locount")},
             "jsonl_path": "",
             "num_total_samples": 34021,
         },
@@ -1218,7 +1302,9 @@ DATASET_INFO = {
             "num_total_samples": 6721,
         },
         "Shoes_data_detect": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "Shoes_data")
+            },
             "jsonl_path": "",
             "num_total_samples": 135,
         },
@@ -1255,22 +1341,30 @@ DATASET_INFO = {
             "num_total_samples": 3602,
         },
         "pill_detect": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "Medical-pills")
+            },
             "jsonl_path": "",
             "num_total_samples": 51,
         },
         "WiderPerson_detect": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "WiderPerson")
+            },
             "jsonl_path": "",
             "num_total_samples": 9000,
         },
         "METU_ALET_detect": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "METU-ALET")
+            },
             "jsonl_path": "",
             "num_total_samples": 2088,
         },
         "homeobjects_detect": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "homeobjects-3K")
+            },
             "jsonl_path": "",
             "num_total_samples": 2285,
         },
@@ -1287,12 +1381,18 @@ DATASET_INFO = {
             "num_total_samples": 858,
         },
         "FiftyOne_detect": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(
+                    DATA_ROOT, "train_data", "dense_object_detection_FiftyOne"
+                )
+            },
             "jsonl_path": "",
             "num_total_samples": 8001,
         },
         "CrowdHuman_detect": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "CrowdHuman")
+            },
             "jsonl_path": "",
             "num_total_samples": 3484,
         },
@@ -1321,47 +1421,55 @@ DATASET_INFO = {
             "num_total_samples": 327,
         },
         "TinyPerson_detect": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "TinyPerson")
+            },
             "jsonl_path": "",
             "num_total_samples": 745,
         },
         "TinyPerson_dense_detect": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "TinyPerson")
+            },
             "jsonl_path": "",
             "num_total_samples": 793,
         },
         "S2TLD_dense_detect": {
-            "data_dir": "",
+            "data_dir": {"input_dir": os.path.join(DATA_ROOT, "train_data", "S2TLD")},
             "jsonl_path": "",
             "num_total_samples": 5037,
         },
         "BDD100K_detect": {
-            "data_dir": "",
+            "data_dir": {"input_dir": os.path.join(DATA_ROOT, "train_data", "BDD100K")},
             "jsonl_path": "",
             "num_total_samples": 70000,
         },
         "DOTAv2_detect": {
-            "data_dir": "",
+            "data_dir": {"input_dir": os.path.join(DATA_ROOT, "train_data", "DOTAv2")},
             "jsonl_path": "",
             "num_total_samples": 1824,
         },
         "FAIR1M_detect": {
-            "data_dir": "",
+            "data_dir": {"input_dir": os.path.join(DATA_ROOT, "train_data", "FAIR1M")},
             "jsonl_path": "",
             "num_total_samples": 16488,
         },
         "NuImages_detect": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "nuImages")
+            },
             "jsonl_path": "",
             "num_total_samples": 60668,
         },
         "VisDrone_detect": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "VisDrone")
+            },
             "jsonl_path": "",
             "num_total_samples": 6465,
         },
         "CARPK_detect": {
-            "data_dir": "",
+            "data_dir": {"input_dir": os.path.join(DATA_ROOT, "train_data", "CARPK")},
             "jsonl_path": "",
             "num_total_samples": 1098,
         },
@@ -1374,9 +1482,7 @@ DATASET_INFO = {
             "num_total_samples": 8001,
         },
         "SKU110k_detect": {
-            "data_dir": {
-                "input_dir": os.path.join(DATA_ROOT, "train_data", "SKU110k")
-            },
+            "data_dir": {"input_dir": os.path.join(DATA_ROOT, "train_data", "SKU110k")},
             "jsonl_path": os.path.join(
                 TRAIN_JSONL_ROOT,
                 "structure_view_understanding/SKU110k_processed_bbox_train.jsonl",
@@ -1426,17 +1532,29 @@ DATASET_INFO = {
             "num_total_samples": 37057,
         },
         "refcoco_ref_detect": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(
+                    DATA_ROOT, "ref_seg_data", "images", "coco2014"
+                )
+            },
             "jsonl_path": "",
             "num_total_samples": 120624,
         },
         "refcoco_plus_ref_detect": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(
+                    DATA_ROOT, "ref_seg_data", "images", "coco2014"
+                )
+            },
             "jsonl_path": "",
             "num_total_samples": 120191,
         },
         "refcocog_ref_detect": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(
+                    DATA_ROOT, "ref_seg_data", "images", "coco2014"
+                )
+            },
             "jsonl_path": "",
             "num_total_samples": 80506,
         },
@@ -1485,17 +1603,29 @@ DATASET_INFO = {
             "num_total_samples": 27363,
         },
         "grounding_refcoco_pointing": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(
+                    DATA_ROOT, "ref_seg_data", "images", "coco2014"
+                )
+            },
             "jsonl_path": "",
             "num_total_samples": 99265,
         },
         "grounding_refcoco_plus_pointing": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(
+                    DATA_ROOT, "ref_seg_data", "images", "coco2014"
+                )
+            },
             "jsonl_path": "",
             "num_total_samples": 98875,
         },
         "grounding_refcocog_pointing": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(
+                    DATA_ROOT, "ref_seg_data", "images", "coco2014"
+                )
+            },
             "jsonl_path": "",
             "num_total_samples": 62567,
         },
@@ -1552,27 +1682,37 @@ DATASET_INFO = {
     },
     "cv_detection_ocr_text_box": {
         "Hiertext_text_bbox_OCR": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "OCR", "Hiertext")
+            },
             "jsonl_path": "",
             "num_total_samples": 8281,
         },
         "icdar2019_text_bbox_OCR": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "OCR", "icdar2019")
+            },
             "jsonl_path": "",
             "num_total_samples": 2757,
         },
         "LSVT2019_text_bbox_OCR": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "OCR", "LSVT2019")
+            },
             "jsonl_path": "",
             "num_total_samples": 29992,
         },
         "RCTW_text_bbox_OCR": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "OCR", "RCTW")
+            },
             "jsonl_path": "",
             "num_total_samples": 8020,
         },
         "ReCTS_text_bbox_OCR": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "OCR", "ReCTS")
+            },
             "jsonl_path": "",
             "num_total_samples": 19998,
         },
@@ -1585,7 +1725,9 @@ DATASET_INFO = {
             "num_total_samples": 626,
         },
         "wildreceipt_text_bbox": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "OCR", "wildreceipt")
+            },
             "jsonl_path": "",
             "num_total_samples": 1267,
         },
@@ -1598,29 +1740,39 @@ DATASET_INFO = {
             "num_total_samples": 399885,
         },
         "mtwi_text_bbox": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "OCR", "mtwi")
+            },
             "jsonl_path": "",
             "num_total_samples": 10045,
         },
     },
     "cv_detection_ocr_text_poly": {
         "Hiertext_text_poly_OCR": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "OCR", "Hiertext")
+            },
             "jsonl_path": "",
             "num_total_samples": 8281,
         },
         "icdar2019_text_poly_OCR": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "OCR", "icdar2019")
+            },
             "jsonl_path": "",
             "num_total_samples": 2757,
         },
         "LSVT2019_text_poly_OCR": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "OCR", "LSVT2019")
+            },
             "jsonl_path": "",
             "num_total_samples": 29992,
         },
         "ReCTS_text_poly_OCR": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "OCR", "ReCTS")
+            },
             "jsonl_path": "",
             "num_total_samples": 19998,
         },
@@ -1633,14 +1785,18 @@ DATASET_INFO = {
             "num_total_samples": 399885,
         },
         "mtwi_text_poly_OCR": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "OCR", "mtwi")
+            },
             "jsonl_path": "",
             "num_total_samples": 10045,
         },
     },
     "cv_detection_ocr_word_box": {
         "Hiertext_word_bbox_OCR": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "OCR", "Hiertext")
+            },
             "jsonl_path": "",
             "num_total_samples": 8281,
         },
@@ -1661,27 +1817,37 @@ DATASET_INFO = {
             "num_total_samples": 979,
         },
         "icdar2019_word_bbox_OCR": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "OCR", "icdar2019")
+            },
             "jsonl_path": "",
             "num_total_samples": 2846,
         },
         "LSVT2019_word_bbox_OCR": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "OCR", "LSVT2019")
+            },
             "jsonl_path": "",
             "num_total_samples": 29992,
         },
         "RCTW_word_bbox_OCR": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "OCR", "RCTW")
+            },
             "jsonl_path": "",
             "num_total_samples": 8020,
         },
         "ReCTS_word_bbox_OCR": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "OCR", "ReCTS")
+            },
             "jsonl_path": "",
             "num_total_samples": 19998,
         },
         "TextOCR_word_bbox_OCR": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "OCR", "TextOCR")
+            },
             "jsonl_path": "",
             "num_total_samples": 21778,
         },
@@ -1694,19 +1860,25 @@ DATASET_INFO = {
             "num_total_samples": 392141,
         },
         "SynthText_word_bbox_OCR": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "OCR", "SynthText")
+            },
             "jsonl_path": "",
             "num_total_samples": 858750,
         },
         "mtwi_word_bbox_OCR": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "OCR", "mtwi")
+            },
             "jsonl_path": "",
             "num_total_samples": 10045,
         },
     },
     "cv_detection_ocr_word_poly": {
         "Hiertext_word_poly_OCR": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "OCR", "Hiertext")
+            },
             "jsonl_path": "",
             "num_total_samples": 8281,
         },
@@ -1719,22 +1891,30 @@ DATASET_INFO = {
             "num_total_samples": 979,
         },
         "icdar2019_word_poly_OCR": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "OCR", "icdar2019")
+            },
             "jsonl_path": "",
             "num_total_samples": 2846,
         },
         "LSVT2019_word_poly_OCR": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "OCR", "LSVT2019")
+            },
             "jsonl_path": "",
             "num_total_samples": 29992,
         },
         "ReCTS_word_poly_OCR": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "OCR", "ReCTS")
+            },
             "jsonl_path": "",
             "num_total_samples": 19998,
         },
         "TextOCR_word_poly_OCR": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "OCR", "TextOCR")
+            },
             "jsonl_path": "",
             "num_total_samples": 21778,
         },
@@ -1747,12 +1927,16 @@ DATASET_INFO = {
             "num_total_samples": 392141,
         },
         "SynthText_word_poly_OCR": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "OCR", "SynthText")
+            },
             "jsonl_path": "",
             "num_total_samples": 858750,
         },
         "mtwi_word_poly_OCR": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "OCR", "mtwi")
+            },
             "jsonl_path": "",
             "num_total_samples": 10045,
         },
@@ -1775,7 +1959,7 @@ DATASET_INFO = {
             "num_total_samples": 11138,
         },
         "Locount_visual": {
-            "data_dir": "",
+            "data_dir": {"input_dir": os.path.join(DATA_ROOT, "train_data", "Locount")},
             "jsonl_path": "",
             "num_total_samples": 34021,
         },
@@ -1804,22 +1988,30 @@ DATASET_INFO = {
             "num_total_samples": 3602,
         },
         "pill_visual": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "Medical-pills")
+            },
             "jsonl_path": "",
             "num_total_samples": 51,
         },
         "WiderPerson_visual": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "WiderPerson")
+            },
             "jsonl_path": "",
             "num_total_samples": 9000,
         },
         "METU_ALET_visual": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "METU-ALET")
+            },
             "jsonl_path": "",
             "num_total_samples": 2088,
         },
         "homeobjects_visual": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "homeobjects-3K")
+            },
             "jsonl_path": "",
             "num_total_samples": 2285,
         },
@@ -1836,12 +2028,18 @@ DATASET_INFO = {
             "num_total_samples": 858,
         },
         "FiftyOne_visual": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(
+                    DATA_ROOT, "train_data", "dense_object_detection_FiftyOne"
+                )
+            },
             "jsonl_path": "",
             "num_total_samples": 8001,
         },
         "CrowdHuman_visual": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "CrowdHuman")
+            },
             "jsonl_path": "",
             "num_total_samples": 3484,
         },
@@ -1870,17 +2068,19 @@ DATASET_INFO = {
             "num_total_samples": 327,
         },
         "TinyPerson_visual": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "TinyPerson")
+            },
             "jsonl_path": "",
             "num_total_samples": 745,
         },
         "S2TLD_visual": {
-            "data_dir": "",
+            "data_dir": {"input_dir": os.path.join(DATA_ROOT, "train_data", "S2TLD")},
             "jsonl_path": "",
             "num_total_samples": 5037,
         },
         "CARPK_visual": {
-            "data_dir": "",
+            "data_dir": {"input_dir": os.path.join(DATA_ROOT, "train_data", "CARPK")},
             "jsonl_path": "",
             "num_total_samples": 1098,
         },
@@ -1893,9 +2093,7 @@ DATASET_INFO = {
             "num_total_samples": 8001,
         },
         "SKU110k_visual": {
-            "data_dir": {
-                "input_dir": os.path.join(DATA_ROOT, "train_data", "SKU110k")
-            },
+            "data_dir": {"input_dir": os.path.join(DATA_ROOT, "train_data", "SKU110k")},
             "jsonl_path": os.path.join(
                 TRAIN_JSONL_ROOT,
                 "structure_view_understanding/SKU110k_processed_visual_train.jsonl",
@@ -1903,27 +2101,33 @@ DATASET_INFO = {
             "num_total_samples": 28264,
         },
         "BDD100K_visual": {
-            "data_dir": "",
+            "data_dir": {"input_dir": os.path.join(DATA_ROOT, "train_data", "BDD100K")},
             "jsonl_path": "",
             "num_total_samples": 70000,
         },
         "DOTAv2_visual": {
-            "data_dir": "",
+            "data_dir": {"input_dir": os.path.join(DATA_ROOT, "train_data", "DOTAv2")},
             "jsonl_path": "",
             "num_total_samples": 1824,
         },
         "FAIR1M_visual": {
-            "data_dir": "",
+            "data_dir": {"input_dir": os.path.join(DATA_ROOT, "train_data", "FAIR1M")},
             "jsonl_path": "",
             "num_total_samples": 16488,
         },
         "VisDrone_visual": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "VisDrone")
+            },
             "jsonl_path": "",
             "num_total_samples": 6465,
         },
         "fish_visual": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(
+                    DATA_ROOT, "train_data", "fish-detection-dataset"
+                )
+            },
             "jsonl_path": "",
             "num_total_samples": 628,
         },
@@ -2168,72 +2372,106 @@ DATASET_INFO = {
     },
     "camera_pose_sft": {
         "scannetv2_camera_pose_estimate_Spec": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "scannetv2")
+            },
             "jsonl_path": "",
             "num_total_samples": 134692,
         },
         "hypersim_camera_pose_estimate_Spec": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "Hypersim")
+            },
             "jsonl_path": "",
             "num_total_samples": 17937,
         },
         "tartanair_camera_pose_estimate_Spec": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "tartanair")
+            },
             "jsonl_path": "",
             "num_total_samples": 246981,
         },
         "IRS_camera_pose_estimate_Spec": {
-            "data_dir": "",
+            "data_dir": {"input_dir": os.path.join(DATA_ROOT, "train_data", "IRS")},
             "jsonl_path": "",
             "num_total_samples": 10330,
         },
         "scannetpp_camera_pose_estimate_Spec": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "scannetpp")
+            },
             "jsonl_path": "",
             "num_total_samples": 158390,
         },
         "objaversev1_camera_pose_estimate_Spec": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "objaverse_v1")
+            },
             "jsonl_path": "",
             "num_total_samples": 126487,
         },
         "co3dv2_camera_pose_estimate_Spec": {
-            "data_dir": "",
+            "data_dir": {"input_dir": os.path.join(DATA_ROOT, "train_data", "CO3Dv2")},
             "jsonl_path": "",
             "num_total_samples": 184658,
         },
         "scenenet_camera_pose_estimate_Spec": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(
+                    DATA_ROOT, "train_data", "ScenenetRGBD", "train"
+                )
+            },
             "jsonl_path": "",
             "num_total_samples": 83734,
         },
         "OmniObject3D_camera_pose_estimate_Spec": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(
+                    DATA_ROOT,
+                    "train_data",
+                    "OmniObject3D",
+                    "raw",
+                    "blender_renders",
+                )
+            },
             "jsonl_path": "",
             "num_total_samples": 28820,
         },
         "MvsSynth_camera_pose_estimate_Spec": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(
+                    DATA_ROOT, "train_data", "MVS-Synth", "GTAV_540"
+                )
+            },
             "jsonl_path": "",
             "num_total_samples": 326,
         },
         "Megasynth_camera_pose_estimate_Spec": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "MegaSynth")
+            },
             "jsonl_path": "",
             "num_total_samples": 33544,
         },
         "Demon_camera_pose_estimate_Spec": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "demon-mve")
+            },
             "jsonl_path": "",
             "num_total_samples": 434,
         },
         "Dl3dv_camera_pose_estimate_Spec": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "DL3DV", "ALL-960P")
+            },
             "jsonl_path": "",
             "num_total_samples": 150854,
         },
         "Wildrgbd_camera_pose_estimate_Spec": {
-            "data_dir": "",
+            "data_dir": {
+                "input_dir": os.path.join(DATA_ROOT, "train_data", "wild_rgbd")
+            },
             "jsonl_path": "",
             "num_total_samples": 170573,
         },

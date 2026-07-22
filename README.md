@@ -25,8 +25,9 @@
 
 ## 📣 Updated News
 
+- `[2026.07.22]` Enhancement of the end-to-end [training data preparation workflow](./docs/train_data_prepare.md).
 - `[2026.07.17]` Release of the [training pipeline](./docs/TRAIN.md) adapted for open-source datasets.
-- `[2026.07.17]` Added [benchmark and evaluation support](./docs/EVAL.md) for multi-view reconstruction and camera pose estimation.
+- `[2026.07.17]` Addition of [benchmark and evaluation support](./docs/EVAL.md) for multi-view reconstruction and camera pose estimation.
 - `[2026.07.08]` Release of the dataset for [SenseNova-Vision-Corpus-50M](https://huggingface.co/datasets/sensenova/SenseNova-Vision-Corpus-50M).
 - `[2026.07.08]` Initial release of the weights for [SenseNova-Vision-7B-MoT](https://huggingface.co/sensenova/SenseNova-Vision-7B-MoT).
 - `[2026.07.08]` Initial release of the [inference code](./docs/INFERENCE.md) for SenseNova-Vision.

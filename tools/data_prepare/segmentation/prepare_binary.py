@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Prepare RefCOCO-family, ReasonSeg, and COCO-Interactive binary data.
+"""Prepare binary-segmentation masks and training JSONL files.
 
-The three subcommands preserve the processing behavior of the corresponding
-reference converters. Training splits write masks and JSONL together;
-benchmark splits write masks only because benchmark JSONL files are released
-separately. ``--jsonl-only`` rebuilds a JSONL for any split without writing
-masks.
+RefCOCO-family, ReasonSeg, and COCO-Interactive preserve the processing
+behavior of their reference converters. DOORS and VIS2022 use fixed dataset
+rules so users do not need to supply internal split, filtering, or output-path
+settings. Training splits write masks and JSONL together; benchmark splits
+write masks only because benchmark JSONL files are released separately.
+``--jsonl-only`` applies to the benchmark-derived subcommands only.
 """
 
 from __future__ import annotations
@@ -15,6 +16,7 @@ import json
 import multiprocessing as mp
 import os
 import random
+from collections import defaultdict
 from pathlib import Path
 
 import cv2
@@ -84,6 +86,30 @@ def write_jsonl(path: Path, lines: list[str]) -> None:
             handle.write(line + "\n")
     os.replace(temporary_path, path)
     print(f"Wrote {len(lines)} samples to {path}")
+
+
+def relative_media_path(root: Path, path: Path) -> str:
+    """Return a portable media path rooted at one dataset directory."""
+    try:
+        return path.resolve().relative_to(root.resolve()).as_posix()
+    except ValueError as error:
+        raise ValueError(f"Media path {path} is outside dataset root {root}") from error
+
+
+def binary_jsonl_item(image: str, seg: str, category: str) -> str:
+    question = random.choice(MASK_QUESTION_LIST).format(
+        categories=tag_categories([category]),
+        task_type="binary",
+    )
+    item = {
+        "image": image,
+        "conversations": [
+            {"from": "human", "value": DEFAULT_IMAGE_TOKEN + question},
+            {"from": "gpt", "value": random.choice(MASK_ANSWER_LIST)},
+        ],
+        "seg": seg,
+    }
+    return json.dumps(item, ensure_ascii=False)
 
 
 # ---------------------------------------------------------------------------
@@ -220,9 +246,7 @@ def prepare_refcoco(args: argparse.Namespace) -> None:
 
         all_lines = []
         random.seed(args.seed)
-        for image_info in tqdm(
-            images, desc=f"seg_{dataset}_{args.split}_binary.jsonl"
-        ):
+        for image_info in tqdm(images, desc=f"seg_{dataset}_{args.split}_binary.jsonl"):
             refs = refer_api.imgToRefs[image_info["id"]]
             for ref in refs:
                 try:
@@ -454,9 +478,7 @@ def process_interactive_annotation(
     emit_jsonl: bool,
 ) -> list[str]:
     height, width = image_info["height"], image_info["width"]
-    segmentation_mask = decode_interactive_mask(
-        ann["segmentation"], height, width
-    )
+    segmentation_mask = decode_interactive_mask(ann["segmentation"], height, width)
     if segmentation_mask.sum() == 0:
         return []
     base_name = Path(image_info["file_name"]).stem
@@ -493,9 +515,7 @@ def process_interactive_annotation(
             if split == "train"
             else "datas/inter_seg_data/coco2017"
         )
-        image_path = str(
-            Path(image_root) / f"{split}2017" / image_info["file_name"]
-        )
+        image_path = str(Path(image_root) / f"{split}2017" / image_info["file_name"])
         item = {
             "image": [image_path, media_path(repo_root, prompt_path)],
             "visual_prompt_type": prompt_type,
@@ -579,7 +599,9 @@ def prepare_coco_interactive(args: argparse.Namespace) -> None:
         context = mp.get_context("spawn")
         with context.Pool(processes=worker_count) as pool:
             all_lines = []
-            futures = [pool.apply_async(process_interactive_chunk, (task,)) for task in tasks]
+            futures = [
+                pool.apply_async(process_interactive_chunk, (task,)) for task in tasks
+            ]
             pool.close()
             for future in tqdm(futures, desc="Collecting results"):
                 all_lines.extend(future.get())
@@ -598,6 +620,286 @@ def prepare_coco_interactive(args: argparse.Namespace) -> None:
         print(f"Wrote benchmark masks to {mask_dir}")
 
 
+# ---------------------------------------------------------------------------
+# DOORS
+# ---------------------------------------------------------------------------
+
+
+DOORS_SOURCE_COUNT = 30_181
+DOORS_SAMPLE_COUNT = 30_105
+
+
+def has_valid_doors_region(mask: np.ndarray) -> bool:
+    binary_mask = (mask != 0).astype(np.uint8)
+    contours, _ = cv2.findContours(
+        binary_mask,
+        cv2.RETR_EXTERNAL,
+        cv2.CHAIN_APPROX_SIMPLE,
+    )
+    return any(len(contour) >= 3 for contour in contours)
+
+
+def prepare_doors(args: argparse.Namespace) -> None:
+    """Prepare the DOORS v1.0 DS1 training split from its original masks."""
+    repo_root = Path(args.repo_root).resolve()
+    data_root = resolve_path(repo_root, args.data_root).resolve()
+    jsonl_root = resolve_path(repo_root, args.jsonl_output_dir)
+    image_dir = data_root / "Segmentation/DS1/DS/img"
+    mask_dir = data_root / "Segmentation/DS1/DS/mask"
+
+    if not image_dir.is_dir() or not mask_dir.is_dir():
+        raise FileNotFoundError(
+            "DOORS v1.0 DS1 directories were not found. Expected "
+            f"{image_dir} and {mask_dir}."
+        )
+
+    image_by_name = {path.name: path for path in image_dir.glob("TR_*.png")}
+    mask_by_name = {path.name: path for path in mask_dir.glob("TR_*.png")}
+    if image_by_name.keys() != mask_by_name.keys():
+        missing_images = sorted(mask_by_name.keys() - image_by_name.keys())[:5]
+        missing_masks = sorted(image_by_name.keys() - mask_by_name.keys())[:5]
+        raise ValueError(
+            "DOORS DS1 training image/mask names do not match: "
+            f"missing_images={missing_images}, missing_masks={missing_masks}"
+        )
+    if len(mask_by_name) != DOORS_SOURCE_COUNT:
+        raise ValueError(
+            f"Expected {DOORS_SOURCE_COUNT} DOORS DS1 TR pairs, "
+            f"found {len(mask_by_name)}. Check that the Zenodo v1.0 archive "
+            "was extracted without filtering."
+        )
+
+    random.seed(1453)
+    lines = []
+    for name in tqdm(sorted(mask_by_name), desc="Preparing DOORS", unit="pair"):
+        image_path = image_by_name[name]
+        mask_path = mask_by_name[name]
+        with Image.open(mask_path) as mask_image:
+            mask = np.asarray(mask_image)
+            mask_size = mask_image.size
+        with Image.open(image_path) as image:
+            image_size = image.size
+        if image_size != mask_size:
+            raise ValueError(
+                f"DOORS image/mask size mismatch for {name}: "
+                f"image={image_size}, mask={mask_size}"
+            )
+        if not has_valid_doors_region(mask):
+            continue
+
+        lines.append(
+            binary_jsonl_item(
+                relative_media_path(data_root, image_path),
+                relative_media_path(data_root, mask_path),
+                "boulder",
+            )
+        )
+
+    if len(lines) != DOORS_SAMPLE_COUNT:
+        raise ValueError(
+            f"Expected {DOORS_SAMPLE_COUNT} DOORS samples after filtering, "
+            f"generated {len(lines)}."
+        )
+    write_jsonl(jsonl_root / "seg_binary_doors.jsonl", lines)
+
+
+# ---------------------------------------------------------------------------
+# YouTube-VIS 2022 challenge training data
+# ---------------------------------------------------------------------------
+
+
+VIS2022_VIDEO_COUNT = 2_985
+VIS2022_FRAME_COUNT = 90_160
+VIS2022_SAMPLE_COUNT = 97_318
+VIS2022_MIN_MASK_RATIO = 0.01
+
+
+def decode_vis2022_mask(segmentation, height: int, width: int) -> np.ndarray:
+    if isinstance(segmentation, dict):
+        rle = dict(segmentation)
+        if isinstance(rle.get("counts"), str):
+            rle["counts"] = rle["counts"].encode("ascii")
+        elif isinstance(rle.get("counts"), list):
+            rle = mask_util.frPyObjects(rle, height, width)
+        mask = mask_util.decode(rle)
+    elif isinstance(segmentation, list):
+        polygons = segmentation
+        if polygons and isinstance(polygons[0], (int, float)):
+            polygons = [polygons]
+        rles = mask_util.frPyObjects(polygons, height, width)
+        mask = mask_util.decode(mask_util.merge(rles))
+    else:
+        raise TypeError(f"Unsupported VIS2022 segmentation: {type(segmentation)}")
+
+    if mask.ndim == 3:
+        mask = np.any(mask, axis=2)
+    return mask.astype(bool)
+
+
+def process_vis2022_video(task) -> list[tuple[str, str, str]]:
+    video, annotations, category_names, data_root, write_masks = task
+    data_root = Path(data_root)
+    height, width = int(video["height"]), int(video["width"])
+    file_names = list(video.get("file_names", []))
+    masks_by_frame = [defaultdict(list) for _ in file_names]
+
+    for annotation in annotations:
+        category_id = int(annotation["category_id"])
+        if category_id not in category_names:
+            raise KeyError(f"Unknown VIS2022 category id: {category_id}")
+        segmentations = annotation.get("segmentations", [])
+        if len(segmentations) > len(file_names):
+            raise ValueError(
+                f"VIS2022 track {annotation.get('id')} has more masks than frames"
+            )
+        for frame_index, segmentation in enumerate(segmentations):
+            if segmentation:
+                masks_by_frame[frame_index][category_id].append(segmentation)
+
+    records = []
+    for frame_index, file_name in enumerate(file_names):
+        frame_path = Path(file_name)
+        if frame_path.is_absolute() or ".." in frame_path.parts:
+            raise ValueError(f"Invalid VIS2022 frame path: {file_name}")
+
+        for category_id, category_name in category_names.items():
+            segmentations = masks_by_frame[frame_index].get(category_id, [])
+            if not segmentations:
+                continue
+            binary_mask = np.zeros((height, width), dtype=bool)
+            for segmentation in segmentations:
+                binary_mask |= decode_vis2022_mask(segmentation, height, width)
+            if (
+                float(np.count_nonzero(binary_mask)) / (height * width)
+                < VIS2022_MIN_MASK_RATIO
+            ):
+                continue
+
+            image_relative = Path("train/JPEGImages") / frame_path
+            mask_relative = (
+                Path("train/BINARYMasks")
+                / frame_path.parent
+                / f"{frame_path.stem}_{category_name}.png"
+            )
+            if write_masks:
+                mask_path = data_root / mask_relative
+                ensure_dir(mask_path.parent)
+                Image.fromarray(binary_mask.astype(np.uint8) * 255).save(mask_path)
+            records.append(
+                (
+                    image_relative.as_posix(),
+                    mask_relative.as_posix(),
+                    category_name.replace("_", ""),
+                )
+            )
+    return records
+
+
+def collect_vis2022_records(
+    data_root: Path,
+    source: dict,
+    num_workers: int,
+    *,
+    write_masks: bool,
+    require_images: bool,
+) -> list[tuple[str, str, str]]:
+    videos = source.get("videos", [])
+    annotations = source.get("annotations", [])
+    categories = source.get("categories", [])
+    frame_count = sum(len(video.get("file_names", [])) for video in videos)
+    if len(videos) != VIS2022_VIDEO_COUNT or frame_count != VIS2022_FRAME_COUNT:
+        raise ValueError(
+            "Unexpected VIS2022 training inventory: "
+            f"videos={len(videos)}, frames={frame_count}; expected "
+            f"videos={VIS2022_VIDEO_COUNT}, frames={VIS2022_FRAME_COUNT}."
+        )
+
+    category_names = {
+        int(category["id"]): str(category["name"])
+        for category in sorted(categories, key=lambda item: int(item["id"]))
+    }
+    annotations_by_video = defaultdict(list)
+    for annotation in annotations:
+        annotations_by_video[int(annotation["video_id"])].append(annotation)
+
+    if require_images:
+        missing = []
+        for video in videos:
+            for file_name in video.get("file_names", []):
+                image_path = data_root / "train/JPEGImages" / file_name
+                if not image_path.is_file():
+                    missing.append(image_path)
+                    if len(missing) == 5:
+                        break
+            if len(missing) == 5:
+                break
+        if missing:
+            raise FileNotFoundError(
+                "VIS2022 training images are incomplete; first missing paths: "
+                + ", ".join(str(path) for path in missing)
+            )
+
+    tasks = [
+        (
+            video,
+            annotations_by_video[int(video["id"])],
+            category_names,
+            str(data_root),
+            write_masks,
+        )
+        for video in videos
+    ]
+    worker_count = 1 if num_workers <= 1 else min(num_workers, mp.cpu_count())
+    records = []
+    if worker_count == 1:
+        iterator = map(process_vis2022_video, tasks)
+        for result in tqdm(
+            iterator, total=len(tasks), desc="Preparing VIS2022", unit="video"
+        ):
+            records.extend(result)
+    else:
+        context = mp.get_context("spawn")
+        with context.Pool(processes=worker_count) as pool:
+            for result in tqdm(
+                pool.imap(process_vis2022_video, tasks),
+                total=len(tasks),
+                desc="Preparing VIS2022",
+                unit="video",
+            ):
+                records.extend(result)
+    return records
+
+
+def prepare_vis2022(args: argparse.Namespace) -> None:
+    repo_root = Path(args.repo_root).resolve()
+    data_root = resolve_path(repo_root, args.data_root).resolve()
+    jsonl_root = resolve_path(repo_root, args.jsonl_output_dir)
+    annotation_path = data_root / "train/instances.json"
+    if not annotation_path.is_file():
+        raise FileNotFoundError(
+            f"VIS2022 training annotations were not found: {annotation_path}"
+        )
+
+    with annotation_path.open("r", encoding="utf-8") as handle:
+        source = json.load(handle)
+    records = collect_vis2022_records(
+        data_root,
+        source,
+        args.num_workers,
+        write_masks=getattr(args, "write_masks", True),
+        require_images=getattr(args, "require_images", True),
+    )
+    if len(records) != VIS2022_SAMPLE_COUNT:
+        raise ValueError(
+            f"Expected {VIS2022_SAMPLE_COUNT} VIS2022 samples after filtering, "
+            f"generated {len(records)}."
+        )
+
+    random.seed(1453)
+    lines = [binary_jsonl_item(*record) for record in records]
+    write_jsonl(jsonl_root / "seg_binary_vis2022.jsonl", lines)
+
+
 def add_common_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--repo-root", default=".")
     parser.add_argument(
@@ -609,6 +911,14 @@ def add_common_arguments(parser: argparse.ArgumentParser) -> None:
         "--jsonl-only",
         action="store_true",
         help="Generate JSONL without writing or checking masks.",
+    )
+
+
+def add_fixed_dataset_arguments(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--repo-root", default=".")
+    parser.add_argument(
+        "--jsonl-output-dir",
+        default="jsonl_generate/train_jsonls/segmentation",
     )
 
 
@@ -659,6 +969,17 @@ def build_parser() -> argparse.ArgumentParser:
     interactive.add_argument("--split", default="train", choices=("train", "val"))
     interactive.add_argument("--num-workers", type=int, default=0)
     interactive.set_defaults(func=prepare_coco_interactive)
+
+    doors = subparsers.add_parser("doors")
+    add_fixed_dataset_arguments(doors)
+    doors.add_argument("--data-root", default="datas/ref_seg_data/DOORS")
+    doors.set_defaults(func=prepare_doors)
+
+    vis2022 = subparsers.add_parser("vis2022")
+    add_fixed_dataset_arguments(vis2022)
+    vis2022.add_argument("--data-root", default="datas/ref_seg_data/VIS2022")
+    vis2022.add_argument("--num-workers", type=int, default=1)
+    vis2022.set_defaults(func=prepare_vis2022)
 
     return parser
 
