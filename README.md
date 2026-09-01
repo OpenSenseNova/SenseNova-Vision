@@ -657,16 +657,16 @@ We further compare SenseNova-Vision with recent generalist visual models that sp
     <th align="center" colspan="2">Point Prompt</th>
   </tr>
   <tr>
-    <td align="center"><a href="./assets/showcase/segmentation/inter/point_prompt_1.webp"><img height="220" alt="interactive segmentation point prompt case 1" src="./assets/showcase/segmentation/inter/point_prompt_1.webp"></a></td>
-    <td align="center"><a href="./assets/showcase/segmentation/inter/04_sample_000151_000000491497_point.webp"><img height="220" alt="interactive segmentation point prompt case 2" src="./assets/showcase/segmentation/inter/04_sample_000151_000000491497_point.webp"></a></td>
+    <td align="center"><a href="./assets/showcase/segmentation/inter/04_sample_000151_000000491497_point.webp"><img height="220" alt="interactive segmentation point prompt case 1" src="./assets/showcase/segmentation/inter/04_sample_000151_000000491497_point.webp"></a></td>
+    <td align="center"><a href="./assets/showcase/segmentation/inter/05_sample_000071_000000480985_point.webp"><img height="220" alt="interactive segmentation point prompt case 2" src="./assets/showcase/segmentation/inter/05_sample_000071_000000480985_point.webp"></a></td>
   </tr>
   <tr>
     <th align="center">Box Prompt</th>
     <th align="center">Scribble Prompt</th>
   </tr>
   <tr>
-    <td align="center"><a href="./assets/showcase/segmentation/inter/05_sample_000071_000000480985_point.webp"><img height="220" alt="interactive segmentation box prompt case 1" src="./assets/showcase/segmentation/inter/05_sample_000071_000000480985_point.webp"></a></td>
-    <td align="center"><a href="./assets/showcase/segmentation/inter/20260630-145454.webp"><img height="220" alt="interactive segmentation scribble prompt case 1" src="./assets/showcase/segmentation/inter/20260630-145454.webp"></a></td>
+    <td align="center"><a href="./assets/showcase/segmentation/inter/20260630-145454.webp"><img height="220" alt="interactive segmentation box prompt case 1" src="./assets/showcase/segmentation/inter/20260630-145454.webp"></a></td>
+    <td align="center"><a href="./assets/showcase/segmentation/inter/point_prompt_1.webp"><img height="220" alt="interactive segmentation scribble prompt case 1" src="./assets/showcase/segmentation/inter/point_prompt_1.webp"></a></td>
   </tr>
 </table>
 
