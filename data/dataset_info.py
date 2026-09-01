@@ -740,20 +740,42 @@ DATASET_INFO = {
     },
     "t2i_general": {
         "BLIP3o-Pretrain-Long-Caption": {
-            "data_dir": os.path.join(DATA_ROOT, "train_data", "blip3o", "long_caption"),
-            "jsonl_path": "",
+            "data_dir": os.path.join(
+                DATA_ROOT,
+                "train_data",
+                "BLIP3o",
+                "BLIP3o-Pretrain-Long-Caption",
+            ),
+            "jsonl_path": os.path.join(
+                TRAIN_JSONL_ROOT,
+                "image_generation/BLIP3o-Pretrain-Long-Caption.jsonl",
+            ),
             "num_total_samples": 6847620,
         },
         "BLIP3o-Pretrain-Short-Caption": {
             "data_dir": os.path.join(
-                DATA_ROOT, "train_data", "blip3o", "short_caption"
+                DATA_ROOT,
+                "train_data",
+                "BLIP3o",
+                "BLIP3o-Pretrain-Short-Caption",
             ),
-            "jsonl_path": "",
+            "jsonl_path": os.path.join(
+                TRAIN_JSONL_ROOT,
+                "image_generation/BLIP3o-Pretrain-Short-Caption.jsonl",
+            ),
             "num_total_samples": 2386046,
         },
-        "BLIP3o-Long-part2": {
-            "data_dir": os.path.join(DATA_ROOT, "train_data", "blip3o", "long_caption"),
-            "jsonl_path": "",
+        "BLIP3o-Pretrain-Long-Caption-part2": {
+            "data_dir": os.path.join(
+                DATA_ROOT,
+                "train_data",
+                "BLIP3o",
+                "BLIP3o-Pretrain-Long-Caption",
+            ),
+            "jsonl_path": os.path.join(
+                TRAIN_JSONL_ROOT,
+                "image_generation/BLIP3o-Pretrain-Long-Caption-part2.jsonl",
+            ),
             "num_total_samples": 12809032,
         },
     },

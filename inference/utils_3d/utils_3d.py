@@ -1,13 +1,12 @@
 # Copyright (c) 2026 SenseNova-Vision contributors.
 
-from typing import List
+from typing import List, Optional
 
 import numpy as np
 import open3d as o3d
 import trimesh
 from numpy.typing import NDArray
 from PIL import Image
-from scipy.spatial.transform import Rotation
 
 from .geometry import (
     normals_edge,
@@ -19,6 +18,7 @@ def postprocess_reconstruction(
     pts3d: List[NDArray[np.float32]],  # N, H, W, 3
     colors: List[Image.Image],
     *,
+    valid_masks: Optional[List[NDArray[np.bool_]]] = None,
     mask_edge: bool = True,  # whether to compute an edge mask based on normals and apply it to the output
     edge_normal_threshold: float = 5.0,
     mask_sky: bool = False,  # TODO: not implemented yet
@@ -27,15 +27,31 @@ def postprocess_reconstruction(
     voxel_downsample: bool = False,  # optional voxel downsample before filtering
     voxel_size: float = 4.0 / 512.0,
 ) -> trimesh.Scene:
-    rgb_colors = [
-        np.asarray(rgb.convert("RGB"))
-        for rgb in colors
-    ]
+    rgb_colors = [np.asarray(rgb.convert("RGB")) for rgb in colors]
 
-    final_masks = [
-        np.ones(pts.shape[:2], dtype=np.bool_)
-        for pts in pts3d
-    ]
+    if len(pts3d) != len(rgb_colors):
+        raise ValueError(
+            "Recon3D pointmap/color count mismatch: "
+            f"{len(pts3d)} pointmaps for {len(rgb_colors)} colors."
+        )
+
+    if valid_masks is None:
+        final_masks = [np.ones(pts.shape[:2], dtype=np.bool_) for pts in pts3d]
+    else:
+        if len(valid_masks) != len(pts3d):
+            raise ValueError(
+                "Recon3D pointmap/mask count mismatch: "
+                f"{len(pts3d)} pointmaps for {len(valid_masks)} masks."
+            )
+        final_masks = [np.asarray(mask, dtype=np.bool_).copy() for mask in valid_masks]
+
+    for index, (pts, rgb, mask) in enumerate(zip(pts3d, rgb_colors, final_masks)):
+        expected_shape = pts.shape[:2]
+        if rgb.shape[:2] != expected_shape or mask.shape != expected_shape:
+            raise ValueError(
+                f"Recon3D view {index} shape mismatch: pointmap={expected_shape}, "
+                f"color={rgb.shape[:2]}, mask={mask.shape}."
+            )
 
     # ---- mask normal edges ----
     if mask_edge:
@@ -48,9 +64,7 @@ def postprocess_reconstruction(
             )
             edge_masks.append(normal_edges)
 
-        final_masks = [
-            (m1 & m2) for m1, m2 in zip(final_masks, edge_masks)
-        ]
+        final_masks = [(m1 & m2) for m1, m2 in zip(final_masks, edge_masks)]
 
     # ---- mask sky ----
     if mask_sky:
@@ -98,11 +112,10 @@ def postprocess_reconstruction(
     scene_3d = trimesh.Scene()
 
     point_cloud_data = trimesh.PointCloud(
-        vertices=pcd.point["positions"].numpy(),
-        colors=pcd.point["colors"].numpy())
+        vertices=pcd.point["positions"].numpy(), colors=pcd.point["colors"].numpy()
+    )
 
     scene_3d.add_geometry(point_cloud_data)
-
 
     # --- coordinate system conversion: OpenCV to OpenGL ----
     opencv2opengl = np.identity(4)

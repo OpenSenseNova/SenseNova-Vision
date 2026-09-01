@@ -244,7 +244,7 @@ t2i_general:
     - BLIP3o-Pretrain-Short-Caption
     # - DenseFusion-1M
     # - laion-aesthetics
-    - BLIP3o-Long-part2
+    - BLIP3o-Pretrain-Long-Caption-part2
   image_transform_args:
     image_stride: 16
     max_image_size: 1024

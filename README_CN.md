@@ -11,6 +11,7 @@
   <br>
 
   <a href="https://arxiv.org/abs/2607.06560"><img src="https://img.shields.io/badge/arXiv-SenseNova--Vision-b31b1b.svg" alt="arXiv"></a>
+  <a href="https://paperswithcode.co/paper/2607.06560#results"><img src="https://img.shields.io/badge/Papers%20with%20Code-Leaderboard-21cbce.svg" alt="Papers with Code Leaderboard"></a>
   <a href="./docs/EVAL.md"><img src="https://img.shields.io/badge/Evaluation-Guide-green" alt="Evaluation Guide"></a>
   <a href="https://huggingface.co/sensenova/SenseNova-Vision-7B-MoT"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20HuggingFace-Model-yellow" alt="HuggingFace Model"></a>
   <a href="https://huggingface.co/datasets/sensenova/SenseNova-Vision-Corpus-50M"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20HuggingFace-Dataset-yellow" alt="HuggingFace Dataset"></a>
@@ -89,8 +90,19 @@ bash scripts/run_sensenova_vision.sh inference \
   examples/images/2.jpg
 ```
 
+启动 Web Demo。启动脚本会在 Gradio 启动前输出本地访问地址。
+**已验证配置：**默认 BF16 Web Demo 可在 1 张 NVIDIA A800 80GB GPU 上运行，
+不启用 CPU 或磁盘卸载；记录请求的进程显存峰值为 38,226 MiB。建议使用 80GB GPU；
+更小显存的 GPU 尚未完成全任务验证。
+
+```bash
+MODEL_PATH=/path/to/SenseNova-Vision-7B-MoT \
+  bash scripts/run_sensenova_vision.sh demo
+```
+
 根据 [`docs/data_prepare.md`](./docs/data_prepare.md) 准备好 `datas/` 和
-`jsonl_generate/` 后，可运行完整基准评测。完整评测建议至少使用一台 8 卡机器：
+`jsonl_generate/` 后，可运行完整基准评测。完整评测建议至少使用一台配备
+8 张 80GB GPU 的机器：
 
 ```bash
 bash scripts/run_sensenova_vision.sh benchmark all \

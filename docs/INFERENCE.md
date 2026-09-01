@@ -257,7 +257,10 @@ MODEL_PATH=/path/to/SenseNova-Vision-7B-MoT \
   bash scripts/run_sensenova_vision.sh demo
 ```
 
-**Recommended:** 1 x 80GB GPU for the full web demo.
+**Validated configuration:** the default BF16 web demo ran on 1 x NVIDIA A800
+80GB GPU without CPU or disk offload. The recorded request peaked at 38,226 MiB
+of process GPU memory. We recommend an 80GB GPU; GPUs with less memory have not
+yet been validated across the full task set.
 
 Forward `inference/app.py` options only when needed:
 

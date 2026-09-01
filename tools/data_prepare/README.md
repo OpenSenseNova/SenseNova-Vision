@@ -11,6 +11,9 @@ tools/data_prepare/
 ├── general_editing/
 │   ├── prepare_sharegpt_4o.py
 │   └── prepare_gpt_image_edit.py
+├── image_generation/
+│   ├── README.md
+│   └── convert_blip3o_keys.py
 ├── segmentation/
 │   ├── prepare_binary.py
 │   ├── prepare_semantic.py
@@ -45,7 +48,7 @@ it does not define a separate top-level tool family.
 | Task | Guide | Scope |
 | --- | --- | --- |
 | General understanding | [Training data preparation](../../docs/train_data_prepare.md#general-understanding-generation-and-editing) | LLaVA-v1.5 OCR-VQA image download and JSON-to-JSONL conversion with media validation; official FineVision and MAmmoTH-VL sources. |
-| General generation | [Training data preparation](../../docs/train_data_prepare.md#general-understanding-generation-and-editing) | Official BLIP3o and ShareGPT-4o source downloads, with unresolved subset differences documented. |
+| General generation | [Training data preparation](../../docs/train_data_prepare.md#general-understanding-generation-and-editing), [BLIP3o converter](image_generation/README.md) | Official BLIP3o and ShareGPT-4o source downloads, plus released BLIP3o key lists and deterministic JSONL reconstruction. |
 | General editing | [Training data preparation](../../docs/train_data_prepare.md#general-understanding-generation-and-editing) | Official source downloads plus deterministic ShareGPT-4o and GPT-Image-Edit JSONL conversion. |
 | Segmentation | [segmentation/README.md](segmentation/README.md) | Benchmark label preparation, training mask/JSONL generation, and representative source-to-COCO converters. |
 | Dense geometric prediction | [dense_geometric_prediction/README.md](dense_geometric_prediction/README.md) | RGB-to-depth and RGB-to-surface-normal conversion. |
@@ -60,6 +63,13 @@ LLaVA-v1.5 JSONL preparation entrypoints:
 ```bash
 python tools/data_prepare/general_understanding/download_ocr_vqa.py --help
 python tools/data_prepare/general_understanding/prepare_llava_v1_5.py --help
+```
+
+Image generation reconstructs the released BLIP3o selections from canonical
+key lists and the official image-caption tar files:
+
+```bash
+python tools/data_prepare/image_generation/convert_blip3o_keys.py --help
 ```
 
 General editing provides direct dataset preparation entrypoints. Dataset

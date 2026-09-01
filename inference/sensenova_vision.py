@@ -13,6 +13,8 @@ from accelerate import (
 from huggingface_hub import snapshot_download
 from PIL import Image
 
+from .utils_3d.preprocessing import prepare_recon3d_images
+
 try:
     from ..data.transforms import ImageTransform
     from .inferencer import InterleaveInferencer
@@ -181,6 +183,7 @@ CAMERA_POSE_PROMPT = (
     " vector);Enclose the result of each frame in <frame> tags, with no extra"
     " characters, spaces, or line breaks outside the tags."
 )
+
 
 def _resolve_torch_dtype(dtype: str) -> Optional[torch.dtype]:
     dtype = dtype.lower()
@@ -447,10 +450,7 @@ class SenseNovaVisionModel:
         cuda_device_ids = self._cuda_device_ids()
 
         if cuda_device_ids:
-            max_memory = {
-                i: self.max_mem_per_gpu
-                for i in cuda_device_ids
-            }
+            max_memory = {i: self.max_mem_per_gpu for i in cuda_device_ids}
         else:
             max_memory = {
                 "cpu": "128GiB",
@@ -626,14 +626,18 @@ class SenseNovaVisionModel:
             images = images[:max_images]
 
         actual_num_images = len(images)
-        inference_images = [
-            self._load_recon3d_image(image)
-            for image in images
-        ]
+        loaded_images = [self._load_recon3d_image(image) for image in images]
+        image_batch = prepare_recon3d_images(
+            loaded_images,
+            self.recon3d_vae_transform.resize_transform,
+        )
+        inference_images = image_batch.images
+        valid_masks = image_batch.valid_masks
 
         if actual_num_images == 1:
             print("[SenseNova-Vision][Recon3D] duplicate the single input image")
             inference_images = inference_images * 2
+            valid_masks = valid_masks * 2
 
         inference_params = dict(BASE_PARAMS["recon3d"])
         inference_params.update(kwargs)
@@ -676,9 +680,7 @@ class SenseNovaVisionModel:
         scene_3d = None
         if postprocess_predictions or glb_output is not None:
             preprocessed_images = [
-                item
-                for item in preprocessed_input
-                if isinstance(item, Image.Image)
+                item for item in preprocessed_input if isinstance(item, Image.Image)
             ]
 
             if len(preprocessed_images) < actual_num_images:
@@ -691,6 +693,7 @@ class SenseNovaVisionModel:
             scene_3d = postprocess_reconstruction(
                 list(pred_pts3d),
                 preprocessed_images[:actual_num_images],
+                valid_masks=valid_masks[:actual_num_images],
                 mask_edge=mask_edge,
                 mask_sky=mask_sky,
                 mask_black_bg=mask_black_bg,
@@ -781,14 +784,12 @@ class SenseNovaVisionModel:
 
         if mode is None:
             raise ValueError(
-                f"`mode` must be specified. "
-                f"Supported modes: {list(BASE_PARAMS.keys())}"
+                f"`mode` must be specified. Supported modes: {list(BASE_PARAMS.keys())}"
             )
 
         if mode not in BASE_PARAMS:
             raise ValueError(
-                f"Invalid mode `{mode}`. "
-                f"Supported modes: {list(BASE_PARAMS.keys())}"
+                f"Invalid mode `{mode}`. Supported modes: {list(BASE_PARAMS.keys())}"
             )
 
         if contents is not None and (question is not None or images is not None):
@@ -824,7 +825,9 @@ class SenseNovaVisionModel:
                 if not isinstance(item, dict):
                     raise TypeError(f"`contents[{index}]` must be a dictionary.")
                 if "value" not in item:
-                    raise ValueError(f"`contents[{index}]` must contain a `value` field.")
+                    raise ValueError(
+                        f"`contents[{index}]` must contain a `value` field."
+                    )
 
                 item_type = item.get("type")
                 value = item["value"]
@@ -836,7 +839,11 @@ class SenseNovaVisionModel:
                         input_lists.append(text)
                 elif item_type == "image":
                     try:
-                        image = value if isinstance(value, Image.Image) else Image.open(value)
+                        image = (
+                            value
+                            if isinstance(value, Image.Image)
+                            else Image.open(value)
+                        )
                         input_lists.append(image.convert("RGB"))
                     except Exception as e:
                         raise RuntimeError(
@@ -939,7 +946,6 @@ class SenseNovaVisionModel:
 
 
 if __name__ == "__main__":
-    
     model = SenseNovaVisionModel(
         model_path="sensenova/SenseNova-Vision-7B-MoT",
         dtype="bf16",
@@ -951,7 +957,7 @@ if __name__ == "__main__":
         images=["examples/images/1.jpg"],
         mode="understanding",
     )
-    
+
     print(text)
 
     # Example 2: binary segmentation, returns a PIL.Image.Image
@@ -962,14 +968,13 @@ if __name__ == "__main__":
     )
     image.save("seg.png")
 
-
     # Example 3: depth estimation, returns a PIL.Image.Image
     image = model.generate(
         question="<image> Estimate relative depth for each pixel in the image, with closer objects appearing brighter and distant objects appearing darker. Output is a grayscale image with pixel values ranging from 0-255.",
         images=["examples/images/3.jpg"],
         mode="dense_perception",
     )
-    
+
     image.save("depth.png")
 
     # Example 4: normal estimation, returns a PIL.Image.Image
@@ -1008,8 +1013,7 @@ if __name__ == "__main__":
             "examples/recon3d/47204575_4852.001.png",
             "examples/recon3d/47204575_4871.692.png",
             "examples/recon3d/47204575_4873.692.png",
-            "examples/recon3d/47204575_4875.791.png"
-
+            "examples/recon3d/47204575_4875.791.png",
         ],
         raw_output="pred_raw.npy",
         glb_output="pred_scene.glb",
@@ -1027,7 +1031,7 @@ if __name__ == "__main__":
             "examples/recon3d/47204575_4852.001.png",
             "examples/recon3d/47204575_4871.692.png",
             "examples/recon3d/47204575_4873.692.png",
-            "examples/recon3d/47204575_4875.791.png"
+            "examples/recon3d/47204575_4875.791.png",
         ],
         mode="understanding",
         vit_transform=model.camera_vit_transform,

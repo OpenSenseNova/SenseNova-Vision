@@ -36,9 +36,9 @@ python -m huggingface_hub.commands.huggingface_cli download \
   --local-dir "$CORPUS_RELEASE_DIR"
 ```
 
-Copy only the four training annotation directories into
-`jsonl_generate/train_jsonls/`. This preserves any benchmark annotations
-already prepared under `jsonl_generate/`:
+Copy the four released training annotation directories and the image-generation
+key lists into `jsonl_generate/train_jsonls/`. This preserves any benchmark
+annotations already prepared under `jsonl_generate/`:
 
 ```bash
 mkdir -p jsonl_generate/train_jsonls
@@ -50,6 +50,9 @@ cp -r "$CORPUS_RELEASE_DIR/segmentation" \
   jsonl_generate/train_jsonls/
 cp -r "$CORPUS_RELEASE_DIR/structure_view_understanding" \
   jsonl_generate/train_jsonls/
+mkdir -p jsonl_generate/train_jsonls/image_generation/keys
+cp "$CORPUS_RELEASE_DIR"/image_generation/keys/*.keys.txt.gz \
+  jsonl_generate/train_jsonls/image_generation/keys/
 ```
 
 The corpus assets are distributed as ordered
@@ -74,7 +77,12 @@ jsonl_generate/train_jsonls/
 ├── dense_geometric_prediction/
 ├── multiview_visual_geometry/
 ├── segmentation/
-└── structure_view_understanding/
+├── structure_view_understanding/
+└── image_generation/
+    └── keys/
+        ├── BLIP3o-Pretrain-Long-Caption.keys.txt.gz
+        ├── BLIP3o-Pretrain-Long-Caption-part2.keys.txt.gz
+        └── BLIP3o-Pretrain-Short-Caption.keys.txt.gz
 
 datas/SenseNova-Vision-Corpus-50M/
 ├── coco2017/
@@ -708,7 +716,7 @@ SN-VC source tables in Appendix Section 7.
 | Understanding | `llava_v1_5` | [LLaVA-Instruct-150K](https://huggingface.co/datasets/liuhaotian/LLaVA-Instruct-150K), [LLaVA data guide](https://github.com/haotian-liu/LLaVA#visual-instruction-tuning) | `datas/train_data/llava_images` | Supported converter |
 | Understanding | `finevision_image`, `finevision_multi_image`, `finevision_text` | [FineVision](https://huggingface.co/datasets/HuggingFaceM4/FineVision) | `datas/train_data/finevision_source` | Official source only |
 | Understanding | `mammoth_image`, `mammoth_text` | [MAmmoTH-VL-Instruct-12M](https://huggingface.co/datasets/MAmmoTH-VL/MAmmoTH-VL-Instruct-12M) | `datas/train_data/mammoth_vl_source` | Official source only |
-| Generation | `BLIP3o-Pretrain-Long-Caption`, `BLIP3o-Pretrain-Short-Caption`, `BLIP3o-Long-part2` | [BLIP3o datasets](https://huggingface.co/BLIP3o/datasets) | `datas/train_data/blip3o` | Official source only |
+| Generation | `BLIP3o-Pretrain-Long-Caption`, `BLIP3o-Pretrain-Short-Caption`, `BLIP3o-Pretrain-Long-Caption-part2` | [BLIP3o datasets](https://huggingface.co/BLIP3o/datasets) | `datas/train_data/BLIP3o` | Released key lists and supported converter |
 | Generation/editing | ShareGPT-4o text-to-image, `ShareGPT_4o_edit` | [ShareGPT-4o-Image](https://huggingface.co/datasets/FreedomIntelligence/ShareGPT-4o-Image) | `datas/train_data/sharegpt_4o` | Editing converter only |
 | Editing | `Nano-consistent-150k` | [Nano-consistent-150k](https://huggingface.co/datasets/Yejy53/Nano-consistent-150k) | `datas/train_data/nano_consistent_150k` | Official source only |
 | Editing | `multi_edit` | [MultiEdit](https://huggingface.co/datasets/inclusionAI/MultiEdit) | `datas/train_data/multiedit` | Official source only; gated |
@@ -770,12 +778,25 @@ python -m huggingface_hub.commands.huggingface_cli download \
   MAmmoTH-VL/MAmmoTH-VL-Instruct-12M --repo-type dataset \
   --local-dir datas/train_data/mammoth_vl_source
 
+BLIP3O_ROOT=datas/train_data/BLIP3o
+mkdir -p "$BLIP3O_ROOT"
 python -m huggingface_hub.commands.huggingface_cli download \
   BLIP3o/BLIP3o-Pretrain-Long-Caption --repo-type dataset \
-  --local-dir datas/train_data/blip3o/long_caption
+  --local-dir "$BLIP3O_ROOT/BLIP3o-Pretrain-Long-Caption"
 python -m huggingface_hub.commands.huggingface_cli download \
   BLIP3o/BLIP3o-Pretrain-Short-Caption --repo-type dataset \
-  --local-dir datas/train_data/blip3o/short_caption
+  --local-dir "$BLIP3O_ROOT/BLIP3o-Pretrain-Short-Caption"
+
+# The converter can read tar files directly. Training expects regular image
+# files, so extract every archive into a directory named after its tar stem.
+for archive in \
+  "$BLIP3O_ROOT"/BLIP3o-Pretrain-Long-Caption/*.tar \
+  "$BLIP3O_ROOT"/BLIP3o-Pretrain-Short-Caption/*.tar; do
+  shard_dir="${archive%.tar}"
+  mkdir -p "$shard_dir"
+  tar -xf "$archive" -C "$shard_dir"
+done
+unset BLIP3O_ROOT
 
 python -m huggingface_hub.commands.huggingface_cli download \
   Yejy53/Nano-consistent-150k --repo-type dataset \
@@ -823,12 +844,13 @@ python -m huggingface_hub.commands.huggingface_cli download \
 
 ### Conversion and Configuration
 
-Create the task JSONL directories and run the three deterministic converters:
+Create the task JSONL directories and run the deterministic converters:
 
 ```bash
 mkdir -p \
   jsonl_generate/train_jsonls/understanding \
-  jsonl_generate/train_jsonls/editing
+  jsonl_generate/train_jsonls/editing \
+  jsonl_generate/train_jsonls/image_generation
 
 python tools/data_prepare/general_understanding/prepare_llava_v1_5.py \
   --input-json "$LLAVA_ANNOTATION_DIR/llava_v1_5_mix665k.json"
@@ -838,5 +860,28 @@ python tools/data_prepare/general_editing/prepare_sharegpt_4o.py
 python tools/data_prepare/general_editing/prepare_gpt_image_edit.py
 ```
 
-Each converter checks its expected count and decodes every image in the first
-case for each source component. There is no separate validation subcommand.
+Reconstruct the three BLIP3o image-generation JSONLs from the released key
+lists. Long Caption and Long Caption part2 both read the official Long Caption
+source.
+
+```bash
+python tools/data_prepare/image_generation/convert_blip3o_keys.py \
+  --blip3o-root datas/train_data/BLIP3o \
+  --key-list jsonl_generate/train_jsonls/image_generation/keys/BLIP3o-Pretrain-Short-Caption.keys.txt.gz \
+  --jsonl-out-path jsonl_generate/train_jsonls/image_generation/BLIP3o-Pretrain-Short-Caption.jsonl
+
+python tools/data_prepare/image_generation/convert_blip3o_keys.py \
+  --blip3o-root datas/train_data/BLIP3o \
+  --key-list jsonl_generate/train_jsonls/image_generation/keys/BLIP3o-Pretrain-Long-Caption.keys.txt.gz \
+  --jsonl-out-path jsonl_generate/train_jsonls/image_generation/BLIP3o-Pretrain-Long-Caption.jsonl
+
+python tools/data_prepare/image_generation/convert_blip3o_keys.py \
+  --blip3o-root datas/train_data/BLIP3o \
+  --key-list jsonl_generate/train_jsonls/image_generation/keys/BLIP3o-Pretrain-Long-Caption-part2.keys.txt.gz \
+  --jsonl-out-path jsonl_generate/train_jsonls/image_generation/BLIP3o-Pretrain-Long-Caption-part2.jsonl
+```
+
+The BLIP3o converter rejects duplicate keys, validates each image-caption pair,
+and preserves key-list order. The understanding and editing converters check
+their expected counts and decode every image in the first case for each source
+component. There is no separate validation subcommand.
